@@ -26,11 +26,11 @@
 //unsigned int __lt_int = 0;
 static const unsigned int lt_hash = 31;
 
-LtInner __ltComplex = { LT_DUMP_LONG, LT_VERBOSE, NULL, 0 };
+zhInner __ltComplex = { LT_DUMP_LONG, LT_VERBOSE, NULL, 0 };
  
-LtInner __ltHistoric = { LT_DUMP_SHORT, LT_VERBOSE, NULL, 0 };
+zhInner __ltHistoric = { LT_DUMP_SHORT, LT_VERBOSE, NULL, 0 };
 
-LtInner __ltSimple = { LT_DUMP_SHORT, LT_CONDENSED, NULL, 0 };
+zhInner __ltSimple = { LT_DUMP_SHORT, LT_CONDENSED, NULL, 0 };
 
 //Dump all values in a table.
 static const char __lt_fmt[] =
@@ -69,9 +69,9 @@ static const char *lt_polymorph_type_names[] = {
 	[LITE_NOD] = "node",     
 };
 
-static const LiteRecord nul = { 0 };
+static const zhRecord nul = { 0 };
 
-static const LiteRecord *supernul = &nul;
+static const zhRecord *supernul = &nul;
 
 static const int lt_maxbuf = 64;
 
@@ -113,7 +113,7 @@ static int build_backwards (zKeyval *t, unsigned char *buf, int bs) {
 			buf[ --mm ] = '.';
 		}
 		else if (p->key.type == LITE_BLB) {
-			LiteBlob *b = &p->key.v.vblob;
+			zhBlob *b = &p->key.v.vblob;
 			mm -= b->size;
 			memcpy( &buf[ mm ], b->blob, b->size );
 			buf[ --mm ] = '.';
@@ -174,7 +174,7 @@ int lt_count_at_index ( zTable *t, int index, int type ) {
 		if ( lt_vta( t, index ) != LITE_TBL )
 			return 1; //t->count;
 		else {
-			LiteTable *tt = &lt_table_at( t, index );
+			zhTable *tt = &lt_table_at( t, index );
 			return ( tt ) ? (tt->count - type) : 0;
 		}
 	}
@@ -183,7 +183,7 @@ int lt_count_at_index ( zTable *t, int index, int type ) {
 		if ( lt_vta( t, index ) != LITE_TBL )
 			return 1;
 		else {
-			LiteTable *tt = &lt_table_at( t, index );
+			zhTable *tt = &lt_table_at( t, index );
 			return ( tt ) ? (tt->count - type) : 0;
 		}
 	}
@@ -289,7 +289,7 @@ zTable *lt_init ( zTable *t, zKeyval *k, int size ) {
 
 
 //Adds a value to a table data structure
-LiteType lt_add ( zTable *t, int side, LiteType lt, int vi, float vf,
+zhType lt_add ( zTable *t, int side, zhType lt, int vi, float vf,
 	char *vc, unsigned char *vb, unsigned int vblen, void *vn, zTable *vt, char *trim )
 {
 
@@ -299,8 +299,8 @@ LiteType lt_add ( zTable *t, int side, LiteType lt, int vi, float vf,
 	}
 
 	//...		
-	LiteValue  *v = (!side) ? &(t->head + t->index)->key : &(t->head + t->index)->value;
-	LiteRecord *r = &v->v;
+	zhValue  *v = (!side) ? &(t->head + t->index)->key : &(t->head + t->index)->value;
+	zhRecord *r = &v->v;
 	v->type       = lt;
 
 	//Check for zero length blobs or text
@@ -358,7 +358,7 @@ LiteType lt_add ( zTable *t, int side, LiteType lt, int vi, float vf,
 
 
 //Return types
-LiteType lt_rettype( zTable *t, int side, int index ) {
+zhType lt_rettype( zTable *t, int side, int index ) {
 	if ( index < 0 || index > t->count ) {
 		return ( t->error = ZHASHER_ERR_LT_INVALID_INDEX ) ? 0 : 0;
 	}
@@ -373,7 +373,7 @@ const char *lt_rettypename( zTable *t, int side, int index ) {
 		t->error = ZHASHER_ERR_LT_INVALID_INDEX; 
 		return lt_polymorph_type_names[ 0 ];
 	}
-	LiteType i = (!side) ? (t->head + index)->key.type : (t->head + index)->value.type;
+	zhType i = (!side) ? (t->head + index)->key.type : (t->head + index)->value.type;
 	return lt_polymorph_type_names[ (int) i ];
 }
 
@@ -391,15 +391,15 @@ int lt_move ( zTable *t, int dir ) {
 		return -1;
 	}
 
-	//LiteValue *curr  = &(t->head + t->index)->value;
+	//zhValue *curr  = &(t->head + t->index)->value;
 	zKeyval *curr     = (t->head + t->index);
 	zKeyval **cptr    = &curr;
-	LiteValue *value = &curr->value;
+	zhValue *value = &curr->value;
 
 	//Left or right?	
 	if ( !dir ) {
 		//Set count of elements in this new table to actual count
-		LiteTable *T = &value->v.vtable;
+		zhTable *T = &value->v.vtable;
 		value->type  = LITE_TBL;
 		t->rCount    = &T->count;
 
@@ -416,10 +416,10 @@ int lt_move ( zTable *t, int dir ) {
 	}
 	else {
 		//Set references
-		LiteValue *key = &curr->key; 
+		zhValue *key = &curr->key; 
 		key->type      = LITE_TRM;
 		value->type    = LITE_NUL;
-		LiteRecord *r  = &key->v;	
+		zhRecord *r  = &key->v;	
 
 		//....
 		if ( !t->current->parent ) {
@@ -429,7 +429,7 @@ int lt_move ( zTable *t, int dir ) {
 		}
 		else if ( t->current->parent ) {
 			r->vptr = (long)t->current->ptr;
-			LiteTable *T = t->current->parent;
+			zhTable *T = t->current->parent;
 			t->rCount = &T->count;
 			t->current = T;
 		}
@@ -461,7 +461,7 @@ void lt_finalize ( zTable *t ) {
 void lt_lock ( zTable *t ) {
 	//Might not be able to reuse this...	
 	zKeyval *parent = NULL;
-	LiteValue *v   = NULL;
+	zhValue *v   = NULL;
 
 	for ( int i=0; i <= t->index; i++ ) {
 		//Get reference
@@ -571,7 +571,7 @@ int lt_get_long_i ( zTable *t, unsigned char *find, int len ) {
 
 
 //Return zKeyval at certain index
-LiteValue *lt_retany ( zTable *t, int index ) {
+zhValue *lt_retany ( zTable *t, int index ) {
 	return ( index <= -1 || index > t->count ) ? NULL : &(t->head + index)->value; 
 }
 
@@ -592,24 +592,24 @@ zKeyval *lt_retkv ( zTable *t, int index ) {
 }
 
 
-//Return a LiteRecord matching a certain type at a certain index
-LiteRecord *lt_ret ( zTable *t, LiteType type, int index ) {
+//Return a zhRecord matching a certain type at a certain index
+zhRecord *lt_ret ( zTable *t, zhType type, int index ) {
 	if ( index <= -1 || index > t->count ) {
 		t->error = ZHASHER_ERR_LT_INVALID_INDEX;
-		return (LiteRecord *)supernul; 
+		return (zhRecord *)supernul; 
 	}
 #if 0
 	}
 	else {
 		if ( index <= -1 || index < t->start || index > t->end ) {
 			t->error = ZHASHER_ERR_LT_OUT_OF_SLICE;
-			return (LiteRecord *)supernul;
+			return (zhRecord *)supernul;
 		}	
 	}
 #endif	
 
 	if ( (t->head + index)->value.type != type ) { 
-		return (LiteRecord *)supernul; 
+		return (zhRecord *)supernul; 
 	}
 
 	return &(t->head + index)->value.v; 
@@ -817,13 +817,13 @@ static void lt_printindex ( zKeyval *tt, int showkey, int ind ) {
 	int maxlen = (showkey) ? 24576 : lt_buflen;
   char b[maxlen]; 
 	memset(b, 0, maxlen);
-	struct { int t; LiteRecord *r; } items[2] = {
+	struct { int t; zhRecord *r; } items[2] = {
 		{ tt->key.type  , &tt->key.v    },
 		{ tt->value.type, &tt->value.v  } 
 	};
 
 	for ( int i=0; i<2; i++ ) {
-		LiteRecord *r = items[i].r; 
+		zhRecord *r = items[i].r; 
 		int t = items[i].t;
 		if ( i ) {
 			memcpy( &b[w], " -> ", 4 );
@@ -838,7 +838,7 @@ static void lt_printindex ( zKeyval *tt, int showkey, int ind ) {
 			else if (t == LITE_USR)
 				w += snprintf( &b[w], maxlen - w, "userdata [address: %p]", r->vusrdata );
 			else if (t == LITE_TBL) {
-				LiteTable *rt = &r->vtable;
+				zhTable *rt = &r->vtable;
 				w += snprintf( &b[w], maxlen - w, 
 					"table [address: %p, ptr: %ld, elements: %d]", (void *)rt, rt->ptr, rt->count );
 			}
@@ -865,7 +865,7 @@ static void lt_printindex ( zKeyval *tt, int showkey, int ind ) {
 			else if (t == LITE_TRM)
 				w += snprintf( &b[w], maxlen - w, "%ld", r->vptr );
 			else if (t == LITE_BLB) {
-				LiteBlob *bb = &r->vblob;
+				zhBlob *bb = &r->vblob;
 				if ( bb->size < 0 )
 					return;	
 				if ( bb->size > lt_maxbuf )
@@ -885,8 +885,8 @@ static void lt_printindex ( zKeyval *tt, int showkey, int ind ) {
 
 //Dump a table (needs some flags for debugging) 
 int __lt_dump ( zKeyval *kv, int i, void *p ) {
-	LiteType vt = kv->value.type;
-	LtInner *pp = (LtInner *)p; 
+	zhType vt = kv->value.type;
+	zhInner *pp = (zhInner *)p; 
 	if ( pp->indextype ) {
 		char buf[ 128 ] = { 0 };
 		int l = snprintf( buf, sizeof(buf), __lt_fmt, i, pp->level, &__lt_spaces[100 - pp->level] );
@@ -938,7 +938,7 @@ void lt_printall ( zTable *t ) {
 
 	for ( int ii=0; ii < t->index; ii++ ) {
 		zKeyval *k = t->head + ii;
-		LiteType kt;
+		zhType kt;
 		int hash;	
 		const char *kk=NULL, *vv=NULL;
 		char bkbuf[1024] = {0}, 
@@ -1014,7 +1014,7 @@ Table *lt_copy (zTable *dest, zTable *src, int from, int to, int weak) {
 	//Loop through each requested element and add it
 	for (int ii=start; ii <= end; ii++) 
 	{
-		LiteValue *r[3] = 
+		zhValue *r[3] = 
 		{
 			&(t->head + ii)->key,
 			&(t->head + ii)->value,
@@ -1022,9 +1022,9 @@ Table *lt_copy (zTable *dest, zTable *src, int from, int to, int weak) {
 		};
 
 #define lt_mega( ... )
-		for ( LiteValue **v=r; *v; v++ )
+		for ( zhValue **v=r; *v; v++ )
 		{
-			LiteValue *vv = *v;
+			zhValue *vv = *v;
 			/*LITE_NODE is handled in printall*/
 			if (vv->type == LITE_NON)
 				lt_mega( tt );

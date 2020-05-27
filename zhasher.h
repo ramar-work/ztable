@@ -202,19 +202,19 @@ enum {
 };
 
 //Define a type polymorph with a bunch of things to help type inference
-typedef struct LiteValue LiteValue;
-typedef struct LiteBlob LiteBlob;
-typedef struct LiteTable LiteTable;
+typedef struct zhValue zhValue;
+typedef struct zhBlob zhBlob;
+typedef struct zhTable zhTable;
 typedef struct zKeyval zKeyval;
-typedef union LiteRecord LiteRecord;
-//typedef struct LiteNode LiteNode;
+typedef union zhRecord zhRecord;
+//typedef struct zhNode zhNode;
 
 typedef struct { 
 	enum { LT_DUMP_SHORT, LT_DUMP_LONG } dumptype; 
 	enum { LT_CONDENSED, LT_VERBOSE } indextype;
 	const char *customfmt;
 	int level; 
-} LtInner;
+} zhInner;
 
 //Table for table values
 typedef enum {
@@ -228,7 +228,7 @@ typedef enum {
   LITE_TBL,     //A "table"
   LITE_TRM,     //Table terminator (NULL alone can't be described)
   LITE_NOD,     //A node
-} LiteType;
+} zhType;
 
 typedef struct {
   unsigned int  total  ,     //Size allocated (the bound)
@@ -246,7 +246,7 @@ typedef struct {
   unsigned char *src   ;     //Source for when you need it
   unsigned char *buf   ;     //Pointer for trimmed keys and values
   zKeyval        *head  ;     //Pointer to the first element
-  LiteTable     *current;    //Pointer to the first element
+  zhTable     *current;    //Pointer to the first element
  #ifndef ERR_H
   int error;
 	#ifndef ERRV_H
@@ -256,18 +256,18 @@ typedef struct {
   
 } zTable;
 
-struct LiteTable {
+struct zhTable {
   uint32_t  count;
   long      ptr;
-  LiteTable *parent;
+  zhTable *parent;
 };
 
-struct LiteBlob {
+struct zhBlob {
   int size;
   uint8_t *blob;
 };
 
-union LiteRecord {
+union zhRecord {
   int         vint;
   float       vfloat;
   char       *vchar;
@@ -275,38 +275,38 @@ union LiteRecord {
   void       *vnull;
 #endif
   void       *vusrdata;
-  LiteBlob    vblob;
-  LiteTable   vtable;
+  zhBlob    vblob;
+  zhTable   vtable;
   long        vptr;
 #if 0
-  LiteNode    vnode;
+  zhNode    vnode;
 #endif
 };
 
-struct LiteValue {
-  LiteType    type;
-  LiteRecord  v;
+struct zhValue {
+  zhType    type;
+  zhRecord  v;
 };
 
 struct zKeyval {
   int hash[LT_MAX_HASH];
   zKeyval *parent;  
-  LiteValue key; 
-  LiteValue value;
+  zhValue key; 
+  zhValue value;
 };
 
-LiteType lt_add (zTable *, int, LiteType, int, float, char *, unsigned char *, unsigned int , void *, zTable *, char *);
+zhType lt_add (zTable *, int, zhType, int, float, char *, unsigned char *, unsigned int , void *, zTable *, char *);
 zTable *lt_init (zTable *, zKeyval *, int) ;
 void lt_printall (zTable *);
 void lt_finalize (zTable *) ;
 int __lt_dump (zKeyval *, int, void *);
-extern LtInner __ltComplex; 
-extern LtInner __ltHistoric; 
-extern LtInner __ltSimple; 
+extern zhInner __ltComplex; 
+extern zhInner __ltHistoric; 
+extern zhInner __ltSimple; 
 int lt_exec_complex (zTable *, int, int, void *, int (*fp)(zKeyval *, int, void *) );
 int lt_move(zTable *, int) ;
 zKeyval *lt_retkv (zTable *, int);
-LiteType lt_rettype (zTable *, int, int);
+zhType lt_rettype (zTable *, int, int);
 const char *lt_rettypename (zTable *, int, int);
 void lt_lock (zTable *); 
 int lt_get_long_i (zTable *, unsigned char *, int);
@@ -317,8 +317,8 @@ void lt_reset (zTable *);
 int lt_set (zTable *, int);
 int lt_absset (zTable *, int);
 int lt_get_raw (zTable *, int);
-LiteValue *lt_retany (zTable *, int );
-LiteRecord *lt_ret (zTable *, LiteType, int );
+zhValue *lt_retany (zTable *, int );
+zhRecord *lt_ret (zTable *, zhType, int );
 const char *lt_strerror (zTable *);
 void lt_clearerror (zTable *);
 void lt_setsrc (zTable *, void *);
