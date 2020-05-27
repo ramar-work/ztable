@@ -152,7 +152,7 @@ unsigned char *lt_get_full_key ( zTable *t, int hash, unsigned char *buf, int bs
 
 
 //Trim things
-unsigned char *lt_trim (uint8_t *msg, char *trim, int len, int *nlen) {
+unsigned char *lt_trim ( uint8_t *msg, char *trim, int len, int *nlen ) {
 	//Define stuff
 	uint8_t *m = msg;
 	int nl= len;
@@ -197,20 +197,20 @@ int lt_countall( zTable *t ) {
 
 
 //Clear error
-void lt_clearerror (zTable *t) {
+void lt_clearerror ( zTable *t ) {
 	t->error = 0;
 }
 
 
 //Return errors as strings
-const char *lt_strerror (zTable *t) {
+const char *lt_strerror ( zTable *t ) {
 	//Paranoid bounds checking
 	return ( t->error > -1 && t->error < ZHASHER_ERR_LT_INDEX_MAX) ? errors[ t->error ] : NULL; 
 }
 
 
 //Initiailizes a table data structure
-zTable *lt_init (zTable *t, zKeyval *k, int size) {
+zTable *lt_init ( zTable *t, zKeyval *k, int size ) {
 	SHOWDATA( "Working with root table %p\n", t );
 
 	//Calculate optimal modulus for hashing
@@ -378,13 +378,13 @@ const char *lt_rettypename( zTable *t, int side, int index ) {
 }
 
 
-const char *lt_typename (int type) {
+const char *lt_typename ( int type ) {
 	return ( type > -1 && type <= LITE_NOD ) ? lt_polymorph_type_names[ type ] : NULL;
 }
 
 
 //Move left or right within the hierarchy of tables
-int lt_move (zTable *t, int dir) {
+int lt_move ( zTable *t, int dir ) {
 	//Out of space
 	if ( t->index > t->total ) {
 		t->error = ZHASHER_ERR_LT_OUT_OF_SPACE;
@@ -448,7 +448,7 @@ int lt_move (zTable *t, int dir) {
 
 
 //Finalize adding to both sides of a table data structure
-void lt_finalize (zTable *t) {
+void lt_finalize ( zTable *t ) {
 	//if these are equal, don't increment both *t->rCount and t->count
 	( t->rCount == &t->count ) ? 0 : ( *t->rCount )++ ; 
 	t->count ++;
@@ -458,7 +458,7 @@ void lt_finalize (zTable *t) {
 
 
 //Hash each key
-void lt_lock (zTable *t) {
+void lt_lock ( zTable *t ) {
 	//Might not be able to reuse this...	
 	zKeyval *parent = NULL;
 	LiteValue *v   = NULL;
@@ -510,7 +510,7 @@ void lt_lock (zTable *t) {
 
 
 //Return index in table where key was found
-int lt_get_long_i (zTable *t, unsigned char *find, int len) {
+int lt_get_long_i ( zTable *t, unsigned char *find, int len ) {
 	zKeyval *hv   = NULL;
 	int     hash = 0,  
           hh   = 0;
@@ -571,7 +571,7 @@ int lt_get_long_i (zTable *t, unsigned char *find, int len) {
 
 
 //Return zKeyval at certain index
-LiteValue *lt_retany (zTable *t, int index) {
+LiteValue *lt_retany ( zTable *t, int index ) {
 	return ( index <= -1 || index > t->count ) ? NULL : &(t->head + index)->value; 
 }
 
@@ -582,7 +582,7 @@ int lt_exists (zTable *t, int index) {
 
 
 //Return a zKeyval at a certain index
-zKeyval *lt_retkv (zTable *t, int index) {
+zKeyval *lt_retkv ( zTable *t, int index ) {
 	if ( index <= -1 || index > t->count ) {
 		t->error = ZHASHER_ERR_LT_INVALID_INDEX;
 		return NULL;
@@ -593,7 +593,7 @@ zKeyval *lt_retkv (zTable *t, int index) {
 
 
 //Return a LiteRecord matching a certain type at a certain index
-LiteRecord *lt_ret (zTable *t, LiteType type, int index) {
+LiteRecord *lt_ret ( zTable *t, LiteType type, int index ) {
 	if ( index <= -1 || index > t->count ) {
 		t->error = ZHASHER_ERR_LT_INVALID_INDEX;
 		return (LiteRecord *)supernul; 
@@ -633,7 +633,7 @@ int lt_absset( zTable *t, int index ) {
 
 
 //Set the current index to another one
-int lt_set (zTable *t, int index) {
+int lt_set ( zTable *t, int index ) {
 	int j = 0;	
 	if ( index < 0 )
 		j = (( t->index + index ) < 0 ) ? -1 : (t->index += index ); 
@@ -651,7 +651,7 @@ int lt_set (zTable *t, int index) {
 
 
 //Reset a table index
-void lt_reset (zTable *t) {
+void lt_reset ( zTable *t ) {
 	t->start = 0;
 	t->end   = 0;
 	t->index = 0;
@@ -659,14 +659,14 @@ void lt_reset (zTable *t) {
 
 
 //Iterate through the indices of a table
-zKeyval *lt_next (zTable *t) {
+zKeyval *lt_next ( zTable *t ) {
 	zKeyval *curr = (t->index > t->count) ? NULL : t->head + t->index;
 	t->index++;
 	return curr;
 }
 
 
-zKeyval *lt_current (zTable *t) {
+zKeyval *lt_current ( zTable *t ) {
 	return ( t->index > t->count ) ? NULL : t->head + t->index;
 }
 
@@ -749,7 +749,7 @@ zKeyval *lt_items_i ( zTable *t, uint8_t *src, int len ) {
 
 
 //Set a data source
-void lt_setsrc (zTable *t, void *src) {
+void lt_setsrc ( zTable *t, void *src ) {
 	t->src = src;
 }
 
@@ -768,13 +768,13 @@ zTable *lt_within_long( zTable *t, uint8_t *src, int len ) {
 	}
 
 	//Set start and end, then return the table
-	st->start = a;
-	st->end = a + (&lt_table_at( t, a ))->count;
-	return st;
+	t->start = a;
+	t->end = a + (&lt_table_at( t, a ))->count;
+	return t;
 }
 
 
-void lt_unset (zTable *t) {
+void lt_unset ( zTable *t ) {
 	if ( t->buf ) {
 		free( t->buf );
 		t->buf = NULL;
@@ -784,7 +784,7 @@ void lt_unset (zTable *t) {
 
 
 //Get a key or value somewhere
-void lt_free (zTable *t) {	
+void lt_free ( zTable *t ) {	
 	//Free any text keys
 	for ( int ii=0; ii < t->count; ii++ ) {
 		zKeyval *k = t->head + ii;
@@ -809,16 +809,6 @@ void lt_free (zTable *t) {
 	}
 }
 
-
-//Print out an initialized table
-void lt_printt (zTable *t) {
-	fprintf( stderr, "t->total:      %d\n", t->total );
-	fprintf( stderr, "t->modulo:     %d\n", t->modulo );
-	fprintf( stderr, "t->index:      %d\n", t->index );
-	fprintf( stderr, "t->count:      %d\n", t->count );
-	fprintf( stderr, "t->rCount:     %p\n", (void *)t->rCount );
-	fprintf( stderr, "t->head:       %p\n", (void *)t->head );
-}
 
 
 //Print a set of values at a particular index
@@ -931,6 +921,16 @@ int lt_exec_complex (zTable *t, int start, int end, void *p, int (*fp)( zKeyval 
 
 
 #ifdef DEBUG_H 
+//Print out an initialized table
+void lt_printt ( zTable *t ) {
+	fprintf( stderr, "t->total:      %d\n", t->total );
+	fprintf( stderr, "t->modulo:     %d\n", t->modulo );
+	fprintf( stderr, "t->index:      %d\n", t->index );
+	fprintf( stderr, "t->count:      %d\n", t->count );
+	fprintf( stderr, "t->rCount:     %p\n", (void *)t->rCount );
+	fprintf( stderr, "t->head:       %p\n", (void *)t->head );
+}
+
 //Get a key or value somewhere
 void lt_printall ( zTable *t ) {
 	//Header

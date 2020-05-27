@@ -9,7 +9,8 @@ struct yakvs { const char *key; char *val; } yakvs_list[] = {
 	{ "nobody", "knows" },
 	{ "the", "trouble I've seen." },
 	{ "Anthony", "Hopkins" },
-	{ "Mike", "Tyson" }
+	{ "Mike", "Tyson" },
+	{ NULL }
 };
 
 int main (int argc, char *argv[]) {
@@ -27,6 +28,7 @@ int main (int argc, char *argv[]) {
 	while ( y->key ) {
 		lt_addtextkey( t, y->key );
 		lt_addtextvalue( t, y->val );
+		lt_finalize( t );
 		y++;
 	}	
 	return 0;
