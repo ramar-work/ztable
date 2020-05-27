@@ -72,7 +72,7 @@ val1: 26
 val2: 0 
 </pre>
 
-Note that unless when using NULL as the middle argument to lt_init, there will always be data to free.  So using lt_free will destroy the table data.
+Note that unless when using NULL as the middle argument to `lt_init`, there will always be data to free.  So using `lt_free` will destroy the table data.
 <pre>
 lt_free( t );
 </pre>
@@ -93,9 +93,139 @@ zKeyval kv[1024] = { 0 };
 lt_init( t, kv, sizeof( kv ) );
 </pre>
 
-As stated earlier, strings and integers are not the only values that zhasher will support. zhasher can map strings to integers, other strings, blobs and void pointers, allowing whatever you want to fit into a slot.   Better support (read <i>typesafe</i>) for more abstract datatypes will probably end up here in the future. 
+As stated earlier, strings and integers are not the only values that zhasher supports. zhasher can map strings to integers, other strings, blobs and void pointers, allowing whatever you want to fit into a slot.   Better support (read <i>typesafe</i>) for more abstract datatypes will probably end up here in the future. 
 
 
 
 ## Reference
 
+
+### Simple
+
+To get busy using zhasher as a hash table, only the following functions are really needed.
+
+#### Initialization & Teardown
+
+`zTable * lt_init ( zTable * , zKeyval * , int )`
+- Initialize the zTable either dynamically or statically.
+
+`void lt_lock ( zTable * )`
+- Initialize hashes for each key.  Use this after all of the values you want in the table have been added.
+
+`void lt_free( zTable * )`
+- Destroy a zTable 
+
+ 
+#### Adding Values
+
+`zhType lt_addintkey(t, v)`
+- Add an integer key.  Return value can be discarded.
+
+`zhType lt_addintvalue(t, v)`
+- Add an integer value.  Return value can be discarded.
+
+`zhType lt_addtextkey(t, v)`
+- Add an zero-terminated string key.  Strings added in this manner are duplicated by zhasher.
+
+`zhType lt_addtextvalue(t, v)`
+- Add an zero-terminated string value.  Strings added in this manner are duplicated by zhasher. 
+
+`zhType lt_addblobvalue(t, vblob, vlen)`
+- Add a BLOB value where vblob is an unsigned char * and vlen is its length.  Return value can be discarded.
+
+`zhType lt_addfloatvalue(t, v)`
+- Add an float value.  Return value can be discarded.
+
+`zhType lt_addudvalue(t, v)`
+- Add an opaque value.  Return value can be discarded.
+
+`void lt_finalize ( zTable * ) `
+- Finalize a key-value set in a zTable.  Use this after adding at least one key and one value.
+
+`void lt_descend( t )`
+- Create a "table" within a zTable 
+
+`void lt_ascend( t )`
+- Ascend from a "table" within a zTable (lt_finalize is not needed after calling this)
+
+
+
+#### Retrieving Values
+
+`int lt_geti ( zTable * , char * )`
+- Check that a string key is present in a zTable.
+
+`int lt_get_long_i ( zTable * , unsigned char * , int)`
+- Check that an unsigned char * block matches a key in a zTable.
+
+`int lt_int( zTable *, const char * )`
+- Retrieve an integer value from a zTable.  Returns 0 if value does not exist.
+
+`float lt_float( zTable *, const char * )`
+- Retrieve an float value from a zTable.  Returns 0 if value does not exist.
+
+`char * lt_text( zTable *, const char * )`
+- Retrieve a signed character value from a zTable.  Returns NULL if value does not exist.
+
+`zhBlob * lt_blob( zTable *, const char * )`
+- Retrieve a zhBlob value from a zTable.  Returns NULL if value does not exist.
+
+`void *lt_userdata( zTable *, const char * )`
+- Retrieve an opaque pointer value from a zTable.  Returns NULL if value does not exist.
+
+
+
+### Helpers
+
+This functions exist to make dealing with text-based and binary data a little bit easier.
+
+`unsigned char * lt_trim ( uint8_t * , char * , int, int * )`
+- Trims whitespace found in a returned unsigned char * value.
+
+
+### Advanced
+
+These functions will help write iterators.
+
+`int lt_exec_complex( zTable * , int, int, void * , int ( * fp)(zKeyval * , int, void * ) )` -
+Base iterator function for acting on the elements in a zTable.
+
+`int lt_counti(t, i)` -
+Get a count of the elements at index <i>i</i>.
+
+`int lt_counta(t, i)` - 
+Get an actual count of the elements at index <i>i</i>.
+
+<!-- `zKeyval * lt_next( zTable * )` - -->
+<!-- Return the zKeyval  -->
+
+<!-- `zKeyval * lt_current( zTable * )` - -->
+<!-- Return the zKeyval  -->
+
+<!-- `void lt_reset( zTable * )` -  -->
+<!-- Reset the pointer -->
+
+<!-- `int lt_exists ( zTable * , int)` - -->
+<!-- const char * lt_strerror( zTable * ); -->
+<!-- void lt_clearerror( zTable * ); -->
+<!-- int lt_count_at_index ( zTable * , int, int); -->
+<!-- int lt_countall ( zTable * ); -->
+<!-- int lt_count_elements ( zTable * , int); -->
+<!-- zKeyval *lt_retkv (zTable *, int); -->
+<!-- zhType lt_rettype (zTable *, int, int); -->
+<!-- const char *lt_rettypename (zTable *, int, int); -->
+<!-- unsigned char *lt_get_full_key (zTable *, int, unsigned char *, int); -->
+<!-- int lt_set (zTable *, int); -->
+<!-- int lt_absset (zTable *, int); -->
+<!-- int lt_get_raw (zTable *, int); -->
+<!-- zhValue *lt_retany (zTable *, int ); -->
+<!-- zhRecord *lt_ret (zTable *, zhType, int ); -->
+<!-- void lt_setsrc (zTable *, void *); -->
+<!-- zKeyval *lt_items_i (zTable *, uint8_t *, int); -->
+<!-- zKeyval *lt_items_by_index (zTable *, int); -->
+<!-- const char *lt_typename (int); -->
+
+
+## Notes
+
+zhasher was extracted from a much larger library of mine called <a href="https://github.com/zaiah-dj/single">single.c</a>.  Much of that library has no use now, but this is one of the pieces that has found its way into my recent projects. 
