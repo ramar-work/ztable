@@ -255,13 +255,11 @@ int main (int argc, char *argv[]) {
 	int key = 0;
 	while ( inc->key ) {
 		if ( inc->depth ) {
-fprintf( stderr, "adding inner record\n" );
 			lt_addtextkey( mt, inc->key );
 			lt_addfloatvalue( mt, inc->val );
 			lt_finalize( mt );
 		}
 		else {
-fprintf( stderr, "adding outer record\n" );
 			if ( key == 1 ) {
 				lt_ascend( mt );
 				key = 0;

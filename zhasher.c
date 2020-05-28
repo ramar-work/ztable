@@ -23,7 +23,6 @@
  * ------------------------------------------- */
 #include "zhasher.h"
 
-//unsigned int __lt_int = 0;
 static const unsigned int lt_hash = 31;
 
 zhInner __ltComplex = { LT_DUMP_LONG, LT_VERBOSE, NULL, 0 };
@@ -32,16 +31,24 @@ zhInner __ltHistoric = { LT_DUMP_SHORT, LT_VERBOSE, NULL, 0 };
 
 zhInner __ltSimple = { LT_DUMP_SHORT, LT_CONDENSED, NULL, 0 };
 
-//Dump all values in a table.
 static const char __lt_fmt[] =
 	"[%-5d] (%d) %s";
 
-static const char __lt_spaces[] = 
+#ifndef LT_TABDUMP
+static const char __lt_ws[] = 
 	"                                                  "
 	"                                                  "
 ;
+#else
+static const char __lt_ws[] = 
+	"\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t"
+	"\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t"
+	"\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t"
+	"\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t"
+;
+#endif 
  
-static const char *errors[] = {
+static const char *lt_errors[] = {
 	[ZHASHER_ERR_LT_ALLOCATE]         = "Failed to allocate space for zTable",
 	[ZHASHER_ERR_LT_OUT_OF_SPACE]     = "Out of space",
 	[ZHASHER_ERR_LT_INVALID_VALUE]    = "Attempted to add invalid value.",
@@ -202,7 +209,7 @@ void lt_clearerror ( zTable *t ) {
 //Return errors as strings
 const char *lt_strerror ( zTable *t ) {
 	//Paranoid bounds checking
-	return ( t->error > -1 && t->error < ZHASHER_ERR_LT_INDEX_MAX) ? errors[ t->error ] : NULL; 
+	return ( t->error > -1 && t->error < ZHASHER_ERR_LT_INDEX_MAX) ? lt_errors[ t->error ] : NULL; 
 }
 
 
@@ -396,20 +403,20 @@ int lt_move ( zTable *t, int dir ) {
 	if ( !dir ) {
 		//Set count of elements in this new table to actual count
 		zhTable *T = &value->v.vtable;
-		value->type  = LITE_TBL;
-		t->rCount    = &T->count;
+		value->type = LITE_TBL;
+		t->rCount = &T->count;
 
 		/*Yay*/
-		T->parent  = ( !t->current ) ? NULL : t->current;
-		T->ptr     = *(long *)&T; 
+		T->parent = ( !t->current ) ? NULL : t->current;
+		T->ptr = *(long *)&T; 
 		t->current = T;
 	}
 	else {
 		//Set references
 		zhValue *key = &curr->key; 
-		key->type      = LITE_TRM;
-		value->type    = LITE_NUL;
-		zhRecord *r  = &key->v;	
+		key->type = LITE_TRM;
+		value->type = LITE_NUL;
+		zhRecord *r = &key->v;	
 
 		//....
 		if ( !t->current->parent ) {
@@ -424,6 +431,7 @@ int lt_move ( zTable *t, int dir ) {
 			t->current = T;
 		}
 	}
+	lt_finalize( t );
 	return 1;
 }
 
@@ -521,7 +529,6 @@ int lt_get_long_i ( zTable *t, unsigned char *find, int len ) {
 	//Find the key
 	for ( int i=0 ; !hv && i < 5; i++ ) {
 		uint8_t buf[LT_POLYMORPH_BUFLEN] = {0};
-		//fprintf( stderr, "%d, %d, %d\n", hh, hash, i );
 
 		if ( (hh = (t->head + hash)->hash[i]) == -1 || i == lt_max_slots ) {
 			return -1;
@@ -866,7 +873,8 @@ int __lt_dump ( zKeyval *kv, int i, void *p ) {
 	zhInner *pp = (zhInner *)p; 
 	if ( pp->indextype ) {
 		char buf[ 128 ] = { 0 };
-		int l = snprintf( buf, sizeof(buf), __lt_fmt, i, pp->level, &__lt_spaces[100 - pp->level] );
+		const char *space = &__lt_ws[ 100 - pp->level ];
+		int l = snprintf( buf, sizeof(buf), __lt_fmt, i, pp->level, space ); 
 		write( LT_DEVICE, buf, l );
 	}
 	lt_printindex( kv, pp->dumptype, pp->level );
@@ -875,7 +883,7 @@ int __lt_dump ( zKeyval *kv, int i, void *p ) {
 }
 
 
-//A complicated iterator
+//An iterator providing more control
 int lt_exec_complex (zTable *t, int start, int end, void *p, int (*fp)( zKeyval *kv, int i, void *p ) ) {
 	//Bounds violations should stop.
 	if ( start < 0 || start > t->count || end < 0 || end > t->count ) {
