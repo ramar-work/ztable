@@ -403,12 +403,6 @@ int lt_move ( zTable *t, int dir ) {
 		T->parent  = ( !t->current ) ? NULL : t->current;
 		T->ptr     = *(long *)&T; 
 		t->current = T;
-
-		//Ascension shouldn't need pointer increment...
-	#ifdef SUPEREXTRA
-		t->count ++;
-		t->index ++;
-	#endif
 	}
 	else {
 		//Set references
@@ -429,15 +423,7 @@ int lt_move ( zTable *t, int dir ) {
 			t->rCount = &T->count;
 			t->current = T;
 		}
-
-	#ifdef SUPEREXTRA
-		lt_finalize (t);
-	#endif
 	}
-
-#ifndef SUPEREXTRA
-	lt_finalize( t );		
-#endif
 	return 1;
 }
 
