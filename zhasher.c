@@ -36,9 +36,6 @@ zhInner __ltSimple = { LT_DUMP_SHORT, LT_CONDENSED, NULL, 0 };
 static const char __lt_fmt[] =
 	"[%-5d] (%d) %s";
 
-static const char __lt_tabs[] = 
-	"\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t";
-
 static const char __lt_spaces[] = 
 	"                                                  "
 	"                                                  "
@@ -393,7 +390,6 @@ int lt_move ( zTable *t, int dir ) {
 
 	//zhValue *curr  = &(t->head + t->index)->value;
 	zKeyval *curr     = (t->head + t->index);
-	zKeyval **cptr    = &curr;
 	zhValue *value = &curr->value;
 
 	//Left or right?	
@@ -459,14 +455,12 @@ void lt_finalize ( zTable *t ) {
 
 //Hash each key
 void lt_lock ( zTable *t ) {
-	//Might not be able to reuse this...	
 	zKeyval *parent = NULL;
-	zhValue *v   = NULL;
 
 	for ( int i=0; i <= t->index; i++ ) {
 		//Get reference
-		zKeyval *tt = t->head + i,
-					 *slot = NULL;
+		zKeyval *tt = t->head + i;
+		zKeyval *slot = NULL;
 		int pp = 0;
     int h = 0;
 
@@ -476,7 +470,6 @@ void lt_lock ( zTable *t ) {
 
 		//Check keys and values...
 		if (tt->value.type == LITE_NUL ) {
-			v = NULL;
 			if ( parent ) {
 				parent = parent->parent;
 			}
@@ -486,7 +479,6 @@ void lt_lock ( zTable *t ) {
 		//Set parent of an item.
 		if ( parent )	{
 			tt->parent = parent; 
-			v = &tt->value;
 		}
 	
 		//Do parents here
@@ -758,7 +750,6 @@ void lt_setsrc ( zTable *t, void *src ) {
 zTable *lt_within_long( zTable *t, uint8_t *src, int len ) {
 	//Whenever we look for a string, we copy til the end
 	int a = 0;
-	int count = 0;
 	t->buf = src;  //set the buffer
 	t->buflen = len;
 
@@ -900,8 +891,6 @@ int __lt_dump ( zKeyval *kv, int i, void *p ) {
 
 //A complicated iterator
 int lt_exec_complex (zTable *t, int start, int end, void *p, int (*fp)( zKeyval *kv, int i, void *p ) ) {
-	int level = 0;	
-
 	//Bounds violations should stop.
 	if ( start < 0 || start > t->count || end < 0 || end > t->count ) {
 		return 0;
