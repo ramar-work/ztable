@@ -1,5 +1,5 @@
 /* ------------------------------------------- * 
- * zhasher.c
+ * ztable.c
  * ---------
  * A hash table library written in C.
  *
@@ -21,7 +21,7 @@
  * ----
  * 
  * ------------------------------------------- */
-#include "zhasher.h"
+#include "ztable.h"
 
 static const unsigned int lt_hash = 31;
 
@@ -49,13 +49,13 @@ static const char __lt_ws[] =
 #endif 
  
 static const char *lt_errors[] = {
-	[ZHASHER_ERR_LT_ALLOCATE]         = "Failed to allocate space for zTable",
-	[ZHASHER_ERR_LT_OUT_OF_SPACE]     = "Out of space",
-	[ZHASHER_ERR_LT_INVALID_VALUE]    = "Attempted to add invalid value.",
-	[ZHASHER_ERR_LT_INVALID_TYPE]     = "Invalid type requested.",
-	[ZHASHER_ERR_LT_INVALID_INDEX]    = "Attempted to access uninitialized index.",
-	[ZHASHER_ERR_LT_OUT_OF_SLICE]     = "Value is out of requested range",	
-	[ZHASHER_ERR_LT_INDEX_MAX]        = "No errors",	
+	[ZTABLE_ERR_LT_ALLOCATE]         = "Failed to allocate space for zTable",
+	[ZTABLE_ERR_LT_OUT_OF_SPACE]     = "Out of space",
+	[ZTABLE_ERR_LT_INVALID_VALUE]    = "Attempted to add invalid value.",
+	[ZTABLE_ERR_LT_INVALID_TYPE]     = "Invalid type requested.",
+	[ZTABLE_ERR_LT_INVALID_INDEX]    = "Attempted to access uninitialized index.",
+	[ZTABLE_ERR_LT_OUT_OF_SLICE]     = "Value is out of requested range",	
+	[ZTABLE_ERR_LT_INDEX_MAX]        = "No errors",	
 };
 
 static const char *lt_polymorph_type_names[] = {
@@ -90,6 +90,14 @@ static const int lt_buflen = 4096;
 #ifdef DEBUG_H
  static const char *fmt = "%-4s\t%-10s\t%-5s\t%-10s\t%-30s\t%-6s\t%-20s\n";
 #endif
+
+
+struct zh_iterator { 
+	int len, depth;
+	void *userdata; 
+	zTable *source;
+};
+
 
 
 static int lt_hashu (unsigned char *ustr, int len, int size) {
@@ -209,7 +217,7 @@ void lt_clearerror ( zTable *t ) {
 //Return errors as strings
 const char *lt_strerror ( zTable *t ) {
 	//Paranoid bounds checking
-	return ( t->error > -1 && t->error < ZHASHER_ERR_LT_INDEX_MAX) ? lt_errors[ t->error ] : NULL; 
+	return ( t->error > -1 && t->error < ZTABLE_ERR_LT_INDEX_MAX) ? lt_errors[ t->error ] : NULL; 
 }
 
 
@@ -256,13 +264,13 @@ zTable *lt_init ( zTable *t, zKeyval *k, int size ) {
 		actual_size = t->modulo;
 		k = malloc(t->modulo * sizeof(zKeyval));
 		if ( !k ) {	
-			t->error = ZHASHER_ERR_LT_ALLOCATE;
+			t->error = ZTABLE_ERR_LT_ALLOCATE;
 			return 0;
 		}
 	}
 
 	if ( memset((void *)k, 0, sizeof(zKeyval) * actual_size) == NULL ) {
-		t->error = ZHASHER_ERR_LT_ALLOCATE;
+		t->error = ZTABLE_ERR_LT_ALLOCATE;
 		return 0;
 	}
 
@@ -298,7 +306,7 @@ zhType lt_add ( zTable *t, int side, zhType lt, int vi, float vf,
 {
 
 	if ( t->index >= t->total ) {
-		t->error = ZHASHER_ERR_LT_OUT_OF_SPACE;
+		t->error = ZTABLE_ERR_LT_OUT_OF_SPACE;
 		return 0;
 	}
 
@@ -333,7 +341,7 @@ zhType lt_add ( zTable *t, int side, zhType lt, int vi, float vf,
 	}
 	else if ( lt == LITE_TBL ) {
 		SHOWDATA( "Adding invalid value table!" );
-		return ( t->error = ZHASHER_ERR_LT_INVALID_VALUE ) ? -1 : -1;
+		return ( t->error = ZTABLE_ERR_LT_INVALID_VALUE ) ? -1 : -1;
 	}
 	else if ( lt == LITE_BLB ) {
 		r->vblob.blob = vb, r->vblob.size = vblen;
@@ -364,7 +372,7 @@ zhType lt_add ( zTable *t, int side, zhType lt, int vi, float vf,
 //Return types
 zhType lt_rettype( zTable *t, int side, int index ) {
 	if ( index < 0 || index > t->count ) {
-		return ( t->error = ZHASHER_ERR_LT_INVALID_INDEX ) ? 0 : 0;
+		return ( t->error = ZTABLE_ERR_LT_INVALID_INDEX ) ? 0 : 0;
 	}
 	return (!side) ? (t->head + index)->key.type : (t->head + index)->value.type; 
 }
@@ -374,7 +382,7 @@ zhType lt_rettype( zTable *t, int side, int index ) {
 //Return typenames
 const char *lt_rettypename( zTable *t, int side, int index ) {
 	if ( index < 0 || index > t->count ) {
-		t->error = ZHASHER_ERR_LT_INVALID_INDEX; 
+		t->error = ZTABLE_ERR_LT_INVALID_INDEX; 
 		return lt_polymorph_type_names[ 0 ];
 	}
 	zhType i = (!side) ? (t->head + index)->key.type : (t->head + index)->value.type;
@@ -391,7 +399,7 @@ const char *lt_typename ( int type ) {
 int lt_move ( zTable *t, int dir ) {
 	//Out of space
 	if ( t->index > t->total ) {
-		t->error = ZHASHER_ERR_LT_OUT_OF_SPACE;
+		t->error = ZTABLE_ERR_LT_OUT_OF_SPACE;
 		return -1;
 	}
 
@@ -569,7 +577,7 @@ int lt_exists (zTable *t, int index) {
 //Return a zKeyval at a certain index
 zKeyval *lt_retkv ( zTable *t, int index ) {
 	if ( index <= -1 || index > t->count ) {
-		t->error = ZHASHER_ERR_LT_INVALID_INDEX;
+		t->error = ZTABLE_ERR_LT_INVALID_INDEX;
 		return NULL;
 	}
 
@@ -580,14 +588,14 @@ zKeyval *lt_retkv ( zTable *t, int index ) {
 //Return a zhRecord matching a certain type at a certain index
 zhRecord *lt_ret ( zTable *t, zhType type, int index ) {
 	if ( index <= -1 || index > t->count ) {
-		t->error = ZHASHER_ERR_LT_INVALID_INDEX;
+		t->error = ZTABLE_ERR_LT_INVALID_INDEX;
 		return (zhRecord *)supernul; 
 	}
 #if 0
 	}
 	else {
 		if ( index <= -1 || index < t->start || index > t->end ) {
-			t->error = ZHASHER_ERR_LT_OUT_OF_SLICE;
+			t->error = ZTABLE_ERR_LT_OUT_OF_SLICE;
 			return (zhRecord *)supernul;
 		}	
 	}
@@ -902,6 +910,98 @@ int lt_exec_complex (zTable *t, int start, int end, void *p, int (*fp)( zKeyval 
 }
 
 
+//Copy iterator
+static int copy_iterator( zKeyval *kv, int i, void *p ) {
+	struct zh_iterator *f = (struct zh_iterator *)p; 
+	zTable **t = (zTable **)f->userdata;
+
+	
+	//decrease depth
+	if ( kv->key.type == LITE_TRM ) {
+		if ( --f->depth == 0 ) {
+			lt_ascend( *t );
+			//lt_finalize( *t );
+			return 0;
+		}
+	}
+
+	//increase depth
+	if ( kv->value.type == LITE_TBL ) {
+		f->depth ++;
+	}
+
+	if ( kv->key.type == LITE_INT )
+		lt_addintkey( *t, kv->key.v.vint );
+	else if ( kv->key.type == LITE_TXT )
+		lt_addtextkey( *t, kv->key.v.vchar );
+	else if ( kv->key.type == LITE_BLB ) 
+		lt_addblobkey( *t, kv->key.v.vblob.blob, kv->key.v.vblob.size );
+	else if ( kv->key.type == LITE_TRM ) {
+		lt_ascend( *t );
+		//lt_finalize( *t );
+		return 1;
+	}
+
+	if ( kv->value.type == LITE_INT )
+		lt_addintvalue( *t, kv->value.v.vint );
+	else if ( kv->value.type == LITE_BLB ) 
+		lt_addblobvalue( *t, kv->value.v.vblob.blob, kv->value.v.vblob.size );
+	else if ( kv->value.type == LITE_FLT )
+		lt_addfloatvalue( *t, kv->value.v.vfloat );	
+	else if ( kv->value.type == LITE_USR )
+		lt_addudvalue( *t, kv->value.v.vusrdata );
+	else if ( kv->value.type == LITE_TXT ) {
+		char * v = !kv->value.v.vchar ? "" : kv->value.v.vchar;
+		lt_addtextvalue( *t, v ); 
+	}
+	else if ( kv->value.type == LITE_TBL ) {
+		lt_descend( *t );
+		return 1;
+	}
+
+	lt_finalize( *t );
+	return 1;
+}
+
+
+
+//Shallow copy
+zTable *lt_copy ( zTable *t, int start, int end ) {
+	zTable *nt = NULL;
+	struct zh_iterator zh_data = { 0 };
+
+	if ( start == -1 ) {
+		return NULL;
+	}
+
+	//Finally, fp->depth should be zero when done, but starting at one may save time
+	if ( !( nt = malloc( sizeof ( zTable ) ) ) || !lt_init( nt, NULL, 256 ) ) {
+		return NULL;
+	}
+
+	//Save data
+	zh_data.len = end - start;	
+	zh_data.depth = 0;
+	zh_data.userdata = &nt;
+	zh_data.source = t;	
+
+	//This should only copy a full table. 
+	//always make the thing start at zero, no matter where table is, it should be fine...
+	//whenever you hit lite_trm, stop		
+
+	//Copy this
+	if ( !lt_exec_complex( t, start, t->count, &zh_data, copy_iterator ) ) {
+		lt_reset( t );
+		lt_lock( nt );
+		return nt; 
+	}
+
+	lt_reset( t );
+	lt_lock( nt );
+	return nt;
+}
+
+
 
 #ifdef DEBUG_H 
 //Print out an initialized table
@@ -913,6 +1013,8 @@ void lt_printt ( zTable *t ) {
 	fprintf( stderr, "t->rCount:     %p\n", (void *)t->rCount );
 	fprintf( stderr, "t->head:       %p\n", (void *)t->head );
 }
+
+
 
 //Get a key or value somewhere
 void lt_printall ( zTable *t ) {
@@ -964,75 +1066,36 @@ void lt_printall ( zTable *t ) {
 		fprintf( stderr, fmt, inbuf, kk, vv, strbuf, bkbuf, habuf, nmbuf );
 	}
 }
-#endif
 
-
-#if 0
-//Copy from start index to end index
-//A macro will handle copying tables (and it'd be even better to do it without duplication)
-Table *lt_copy (zTable *dest, zTable *src, int from, int to, int weak) {
-	//Get a count of all elements
-	int index = 0;
-	int start = (from < 0 ) ? 0 : from;
-	int end   = (to == -1) ? src->index : to;
-#if 0
-	zTable *tt = NULL;
-
-	//Have to allocate a new table here
-	if ( !(tt = malloc( sizeof(zTable))) )
-	{
-		t->error = ZHASHER_ERR_LT_ALLOCATE;
-		return NULL;
+//
+void print_key( zKeyval *kv ) {
+	if ( kv->key.type == LITE_INT )
+		fprintf( stderr, "%d\n", kv->key.v.vint );
+	else if ( kv->key.type == LITE_TXT )
+		fprintf( stderr, "%s\n", kv->key.v.vchar );
+	else if ( kv->key.type == LITE_BLB ) 
+		write( 2, kv->key.v.vblob.blob, kv->key.v.vblob.size );
+	else if ( kv->key.type == LITE_TRM ) {
+		0;
 	}
-#endif
-
-#if 0
-	//Create one on heap (expensive...)
-	if ( !(dest = lt_init( dest, NULL, lt_counti( t, index ))) )
-	{	
-		t->error = ZHASHER_ERR_LT_ALLOCATE;
-		return NULL;
-	}
-
-	//Loop through each requested element and add it
-	for (int ii=start; ii <= end; ii++) 
-	{
-		zhValue *r[3] = 
-		{
-			&(t->head + ii)->key,
-			&(t->head + ii)->value,
-			NULL,	
-		};
-
-#define lt_mega( ... )
-		for ( zhValue **v=r; *v; v++ )
-		{
-			zhValue *vv = *v;
-			/*LITE_NODE is handled in printall*/
-			if (vv->type == LITE_NON)
-				lt_mega( tt );
-			else if (vv->type == LITE_NUL)
-				lt_mega( tt );
-			else if (vv->type == LITE_USR)
-				lt_mega( tt );
-			else if (vv->type == LITE_TBL) 
-				lt_mega( tt );
-			else if (vv->type == LITE_FLT || vv->type == LITE_INT)
-				lt_mega( tt );
-			else if (vv->type == LITE_FLT)
-				lt_mega( tt );
-			else if (vv->type == LITE_TXT)
-				lt_mega( tt );
-			else if (vv->type == LITE_TRM)
-				lt_mega( tt );
-			else if (vv->type == LITE_BLB) 
-				lt_mega( tt );
-		}
-	}
-
-	//Lock so hashing works	
-	lt_lock( tt );
-#endif
-	return NULL;
 }
+
+void print_value( zKeyval *kv ) {
+	if ( kv->value.type == LITE_INT )
+		fprintf( stderr, "%d\n", kv->value.v.vint );
+	else if ( kv->value.type == LITE_TXT )
+		fprintf( stderr, "%s\n", kv->value.v.vchar );
+	else if ( kv->value.type == LITE_BLB ) 
+		write( 2, kv->value.v.vblob.blob, kv->value.v.vblob.size );
+	else if ( kv->value.type == LITE_FLT )
+		fprintf( stderr, "%f\n", kv->value.v.vfloat );
+	else if ( kv->value.type == LITE_USR )
+		fprintf( stderr, "%p\n", kv->value.v.vusrdata );
+	else if ( kv->value.type == LITE_TBL ) {
+		fprintf( stderr, "%p (table)\n", &kv->value.v.vtable );
+	}
+}
+
+
 #endif
+
