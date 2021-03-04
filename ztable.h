@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <inttypes.h>
 #include <unistd.h>
 
 #ifndef ZTABLE_H
@@ -59,37 +58,37 @@
 #define lt_table_at( t, i ) \
 	lt_ret( t, LITE_TBL, i )->vtable
 #define lt_blob( t, key ) \
-	lt_ret( t, LITE_BLB, lt_get_long_i(t, (uint8_t *)key, strlen(key)) )->vblob
+	lt_ret( t, LITE_BLB, lt_get_long_i(t, (unsigned char *)key, strlen(key)) )->vblob
 #define lt_blobdata( t, key ) \
-	lt_ret( t, LITE_BLB, lt_get_long_i(t, (uint8_t *)key, strlen(key)) )->vblob.blob
+	lt_ret( t, LITE_BLB, lt_get_long_i(t, (unsigned char *)key, strlen(key)) )->vblob.blob
 #define lt_blobsize( t, key ) \
-	lt_ret( t, LITE_BLB, lt_get_long_i(t, (uint8_t *)key, strlen(key)) )->vblob.size
+	lt_ret( t, LITE_BLB, lt_get_long_i(t, (unsigned char *)key, strlen(key)) )->vblob.size
 #define lt_int( t, key ) \
-	lt_ret( t, LITE_INT, lt_get_long_i(t, (uint8_t *)key, strlen(key)) )->vint
+	lt_ret( t, LITE_INT, lt_get_long_i(t, (unsigned char *)key, strlen(key)) )->vint
 #define lt_float( t, key ) \
-	lt_ret( t, LITE_FLT, lt_get_long_i(t, (uint8_t *)key, strlen(key)) )->vfloat
+	lt_ret( t, LITE_FLT, lt_get_long_i(t, (unsigned char *)key, strlen(key)) )->vfloat
 #define lt_text( t, key ) \
-	lt_ret( t, LITE_TXT, lt_get_long_i(t, (uint8_t *)key, strlen(key)) )->vchar
+	lt_ret( t, LITE_TXT, lt_get_long_i(t, (unsigned char *)key, strlen(key)) )->vchar
 #define lt_userdata( t, key ) \
-	lt_ret( t, LITE_USR, lt_get_long_i(t, (uint8_t *)key, strlen(key)) )->vusrdata
+	lt_ret( t, LITE_USR, lt_get_long_i(t, (unsigned char *)key, strlen(key)) )->vusrdata
 #define lt_table( t, key ) \
-	lt_ret( t, LITE_TBL, lt_get_long_i(t, (uint8_t *)key, strlen(key)) )->vtable
+	lt_ret( t, LITE_TBL, lt_get_long_i(t, (unsigned char *)key, strlen(key)) )->vtable
 #define lt_lblob( t, key, len ) \
-	lt_ret( t, LITE_BLB, lt_get_long_i(t, (uint8_t *)key, len) )->vblob
+	lt_ret( t, LITE_BLB, lt_get_long_i(t, (unsigned char *)key, len) )->vblob
 #define lt_lblobdata( t, key, len ) \
-	lt_ret( t, LITE_BLB, lt_get_long_i(t, (uint8_t *)key, len) )->vblob.blob
+	lt_ret( t, LITE_BLB, lt_get_long_i(t, (unsigned char *)key, len) )->vblob.blob
 #define lt_lblobsize( t, key, len ) \
-	lt_ret( t, LITE_BLB, lt_get_long_i(t, (uint8_t *)key, len) )->vblob.size
+	lt_ret( t, LITE_BLB, lt_get_long_i(t, (unsigned char *)key, len) )->vblob.size
 #define lt_lint( t, key, len ) \
-	lt_ret( t, LITE_INT, lt_get_long_i(t, (uint8_t *)key, len) )->vint
+	lt_ret( t, LITE_INT, lt_get_long_i(t, (unsigned char *)key, len) )->vint
 #define lt_lfloat( t, key, len ) \
-	lt_ret( t, LITE_FLT, lt_get_long_i(t, (uint8_t *)key, len) )->vfloat
+	lt_ret( t, LITE_FLT, lt_get_long_i(t, (unsigned char *)key, len) )->vfloat
 #define lt_ltext( t, key, len ) \
-	lt_ret( t, LITE_TXT, lt_get_long_i(t, (uint8_t *)key, len) )->vchar
+	lt_ret( t, LITE_TXT, lt_get_long_i(t, (unsigned char *)key, len) )->vchar
 #define lt_luserdata( t, key, len ) \
-	lt_ret( t, LITE_USR, lt_get_long_i(t, (uint8_t *)key, len) )->vusrdata
+	lt_ret( t, LITE_USR, lt_get_long_i(t, (unsigned char *)key, len) )->vusrdata
 #define lt_ltable( t, key, len ) \
-	lt_ret( t, LITE_TBL, lt_get_long_i(t, (uint8_t *)key, len) )->vtable
+	lt_ret( t, LITE_TBL, lt_get_long_i(t, (unsigned char *)key, len) )->vtable
 #define lt_ascend( t ) \
 	lt_move( t, 1 )
 #define lt_descend( t ) \
@@ -133,13 +132,13 @@
 #define lt_addintvalue(t, v) \
 	lt_add(t, 1, LITE_INT, v, 0, 0, 0, 0, 0, 0, NULL)
 #define lt_addtextkey(t, v) \
-	lt_add(t, 0, LITE_TXT, 0, 0, 0, (uint8_t *)v, strlen(v), 0, 0, NULL)
+	lt_add(t, 0, LITE_TXT, 0, 0, 0, (unsigned char *)v, strlen(v), 0, 0, NULL)
 #define lt_addtextvalue(t, v) \
-	lt_add(t, 1, LITE_TXT, 0, 0, 0, (uint8_t *)v, strlen(v), 0, 0, NULL)
+	lt_add(t, 1, LITE_TXT, 0, 0, 0, (unsigned char *)v, strlen(v), 0, 0, NULL)
 #define lt_addblobdkey(t, v, vlen) \
-	lt_add(t, 0, LITE_TXT, 0, 0, 0, (uint8_t *)v, vlen, 0, 0, NULL)
+	lt_add(t, 0, LITE_TXT, 0, 0, 0, (unsigned char *)v, vlen, 0, 0, NULL)
 #define lt_addblobdvalue(t, v, vlen) \
-	lt_add(t, 1, LITE_TXT, 0, 0, 0, (uint8_t *)v, vlen, 0, 0, NULL)
+	lt_add(t, 1, LITE_TXT, 0, 0, 0, (unsigned char *)v, vlen, 0, 0, NULL)
 #define lt_addblobkey(t, vblob, vlen) \
 	lt_add(t, 0, LITE_BLB, 0, 0, 0, vblob, vlen, 0, 0, NULL)
 #define lt_addblobvalue(t, vblob, vlen) \
@@ -157,9 +156,9 @@
 #define lt_addiv(t, v) \
 	lt_add(t, 1, LITE_INT, v, 0, 0, 0, 0, 0, 0, NULL)
 #define lt_addtk(t, v) \
-	lt_add(t, 0, LITE_TXT, 0, 0, 0, (uint8_t *)v, strlen(v), 0, 0, NULL)
+	lt_add(t, 0, LITE_TXT, 0, 0, 0, (unsigned char *)v, strlen(v), 0, 0, NULL)
 #define lt_addtv(t, v) \
-	lt_add(t, 1, LITE_TXT, 0, 0, 0, (uint8_t *)v, strlen(v), 0, 0, NULL)
+	lt_add(t, 1, LITE_TXT, 0, 0, 0, (unsigned char *)v, strlen(v), 0, 0, NULL)
 #define lt_addbk(t, vblob, vlen) \
 	lt_add(t, 0, LITE_BLB, 0, 0, 0, vblob, vlen, 0, 0, NULL)
 #define lt_addbv(t, vblob, vlen) \
@@ -175,11 +174,11 @@
 #define lt_addtbv(t, str, vblob, vlen) \
 	lt_add(t, 1, LITE_BLB, 0, 0, 0, vblob, vlen, 0, 0, str)
 #define lt_items(t, str) \
-	lt_items_i(t, (uint8_t*)str, strlen((char *)str))
+	lt_items_i(t, (unsigned char*)str, strlen((char *)str))
 #define lt_iitems(t, ind) \
 	lt_items_by_index(t, ind )
 #define lt_within( t, str ) \
- 	lt_within_long( t, (uint8_t *)str, strlen(str))
+ 	lt_within_long( t, (unsigned char *)str, strlen(str))
 
 #if 1
  #define SHOWDATA(...)
@@ -257,14 +256,14 @@ typedef struct {
 } zTable;
 
 struct zhTable {
-  uint32_t  count;
+  unsigned int  count;
   long      ptr;
   zhTable *parent;
 };
 
 struct zhBlob {
   int size;
-  uint8_t *blob;
+  unsigned char *blob;
 };
 
 union zhRecord {
@@ -323,20 +322,20 @@ const char *lt_strerror (zTable *);
 void lt_clearerror (zTable *);
 void lt_setsrc (zTable *, void *);
 void lt_free (zTable *);
-unsigned char *lt_trim (uint8_t *, char *, int, int *);
-zKeyval *lt_items_i (zTable *, uint8_t *, int);
+unsigned char *lt_trim (unsigned char *, char *, int, int *);
+zKeyval *lt_items_i (zTable *, unsigned char *, int);
 zKeyval *lt_items_by_index (zTable *, int);
 int lt_count_elements ( zTable *, int);
 int lt_exists (zTable *, int);
 int lt_count_at_index ( zTable *, int, int);
 int lt_countall ( zTable * );
-zTable *lt_within_long( zTable *, uint8_t *, int);
+zTable *lt_within_long( zTable *, unsigned char *, int);
 const char *lt_typename (int);
 zTable *lt_copy (zTable *t, int from, int to); 
 #define lt_copy_table(t, start) lt_copy (t, start, t->count )
 #define lt_copy_by_key(t, start) lt_copy (t, lt_geti( t, start ), t->count )
 #define lt_copy_by_index(t, start) lt_copy (t, start, t->count )
-//Table *lt_within_long ( zTable *t, uint8_t *src, int len );
+//Table *lt_within_long ( zTable *t, unsigned char *src, int len );
 #ifdef DEBUG_H
  /*This is only enabled when debugging*/
  void lt_printt (zTable *);

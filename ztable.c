@@ -164,9 +164,9 @@ unsigned char *lt_get_full_key ( zTable *t, int hash, unsigned char *buf, int bs
 
 
 //Trim things
-unsigned char *lt_trim ( uint8_t *msg, char *trim, int len, int *nlen ) {
+unsigned char *lt_trim ( unsigned char *msg, char *trim, int len, int *nlen ) {
 	//Define stuff
-	uint8_t *m = msg;
+	unsigned char *m = msg;
 	int nl= len;
 	//Move forwards and backwards to find whitespace...
 	while ( memchr(trim, *(m + ( nl - 1 )), 4) && nl-- ) ; 
@@ -508,8 +508,8 @@ int lt_get_long_i ( zTable *t, unsigned char *find, int len ) {
 	zKeyval *hv   = NULL;
 	int     hash = 0,  
           hh   = 0;
-	uint8_t *f   = NULL;
-	uint8_t gb[ LT_POLYMORPH_BUFLEN ] = { 0 };
+	unsigned char *f   = NULL;
+	unsigned char gb[ LT_POLYMORPH_BUFLEN ] = { 0 };
 
 	if ( len > LT_POLYMORPH_BUFLEN ) {
 		return -1;
@@ -536,7 +536,7 @@ int lt_get_long_i ( zTable *t, unsigned char *find, int len ) {
 
 	//Find the key
 	for ( int i=0 ; !hv && i < 5; i++ ) {
-		uint8_t buf[LT_POLYMORPH_BUFLEN] = {0};
+		unsigned char buf[LT_POLYMORPH_BUFLEN] = {0};
 
 		if ( (hh = (t->head + hash)->hash[i]) == -1 || i == lt_max_slots ) {
 			return -1;
@@ -700,7 +700,7 @@ zKeyval *lt_items_by_index ( zTable *t, int ind ) {
 
 
 //Find a table by hash and return until it has no more keys.
-zKeyval *lt_items_i ( zTable *t, uint8_t *src, int len ) {
+zKeyval *lt_items_i ( zTable *t, unsigned char *src, int len ) {
 	//Find a hash, and if it's a table... set some stuff
 	zKeyval *curr = NULL;
 
@@ -748,7 +748,7 @@ void lt_setsrc ( zTable *t, void *src ) {
 
 
 //Will set boundaries on a new table
-zTable *lt_within_long( zTable *t, uint8_t *src, int len ) {
+zTable *lt_within_long( zTable *t, unsigned char *src, int len ) {
 	//Whenever we look for a string, we copy til the end
 	int a = 0;
 	t->buf = src;  //set the buffer
@@ -1060,8 +1060,8 @@ void lt_printall ( zTable *t ) {
 		}
 	
 		//Build a string backwards
-		build_backwards( t->head + ii, (uint8_t *)bkbuf, 1024 );
-		hash = lt_hashu( (uint8_t *)bkbuf, strlen(bkbuf), t->modulo );
+		build_backwards( t->head + ii, (unsigned char *)bkbuf, 1024 );
+		hash = lt_hashu( (unsigned char *)bkbuf, strlen(bkbuf), t->modulo );
 		sprintf( habuf, "%d", ( kt == LITE_NON ) ? -1 : hash );
 		fprintf( stderr, fmt, inbuf, kk, vv, strbuf, bkbuf, habuf, nmbuf );
 	}
