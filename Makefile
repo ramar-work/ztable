@@ -1,8 +1,9 @@
-NAME = zhasher
+NAME = ztable
 OS = $(shell uname | sed 's/[_ ].*//')
 LDFLAGS =
-CLANGFLAGS = -g -O0 -Wall -Werror -std=c99 -Wno-unused -Wno-format-security -fsanitize=address -fsanitize-undefined-trap-on-error
-GCCFLAGS = -g -Wall -Werror -std=c99 -Wno-unused -DLT_TABDUMP
+DFLAGS = -g -O0 -fsanitize=address -fsanitize-undefined-trap-on-error
+CLANGFLAGS = -Wall -Werror -std=c99 -Wno-unused -Wno-format-security
+GCCFLAGS = -Wall -Werror -std=c99 -Wno-unused -DLT_TABDUMP
 CFLAGS = $(CLANGFLAGS)
 CFLAGS = $(GCCFLAGS)
 CC = clang
@@ -13,3 +14,7 @@ VERSION = 0.01
 test:
 	$(CC) $(CFLAGS) -o $(NAME)-test $(NAME).c main.c
 
+debug: CC = clang
+debug: CFLAGS += $(DFLAGS)
+debug: test
+	@printf '' > /dev/null
