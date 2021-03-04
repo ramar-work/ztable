@@ -1,4 +1,4 @@
-#include "zhasher.h"
+#include "ztable.h"
 
 const char *list[] = {
 	"George Washington",
@@ -196,6 +196,7 @@ int main (int argc, char *argv[]) {
 
 	//To add values we can loop through a list.
 	fprintf( stderr, "SHORT WORDS\n============\n" );
+	fprintf( stderr, "Out of a set of 4 words, let's find some values.\n" );
 	struct yakvs *y = yakvs_list;
 	while ( y->key ) {
 		lt_addtextkey( t, y->key );
@@ -206,6 +207,9 @@ int main (int argc, char *argv[]) {
 
 	//Finally, to fully initialize the table, use lt_lock( zTable *t )
 	lt_lock( t );
+
+	//And for the purposes of this test, we'll see where hashes are...
+	lt_dump( t );
 
 	//Get the values
 	char *key1 = "the";
@@ -226,7 +230,8 @@ int main (int argc, char *argv[]) {
 	zTable *tt = malloc( sizeof( zTable ) );
 	lt_init( tt, NULL, 1024 );
 
-	fprintf( stderr, "PRESIDENTS\n============\n" );
+	fprintf( stderr, "\nPRESIDENTS\n============\n" );
+	fprintf( stderr, "Now we're importing a list of the first 45 U.S. presidents\n\n" );
 	while ( *name ) {
 		lt_addtextkey( tt, *name );
 		lt_addintvalue( tt, i );
@@ -235,12 +240,17 @@ int main (int argc, char *argv[]) {
 		name++;
 	}
 
-	//Get the values
+	//Lock the table to initialize hashes
 	lt_lock( tt );
+	
+	//Then dump it for our purposes
+	lt_dump( tt );
+
+	//Get the values
 	char key2[] = "Thomas Jefferson";
-	int xhash = lt_geti( t, key2 );
+	int xhash = lt_geti( tt, key2 );
 	fprintf( stderr, "hash of '%s': %d\n", key2, xhash );
-	int tj = lt_int( t, key2 );
+	int tj = lt_int( tt, key2 );
 	fprintf( stderr, "'%s' => %d\n", key2, tj );
 
 	//Again we free the table with lt_free and free our allocation
@@ -249,10 +259,20 @@ int main (int argc, char *argv[]) {
 
 
 	//Last, let's add all of this and test tables...
-	zTable *mt = malloc( sizeof( zTable ) );
-	lt_init( mt, NULL, 2048 );
+	fprintf( stderr, "\nCOPYINIG\n============\n" );
+	fprintf( stderr, "Now let's import a huge list of companies that are already sorted by category.  Our table will contain a set of entries for each category\n\n" );
 	struct inc *inc = inc_list;	
 	int key = 0;
+
+	//Initialize a big table
+	zTable *mt = malloc( sizeof( zTable ) );
+	lt_init( mt, NULL, 2048 );
+
+	//Add a key and table to keep each of these entries in the same "namespace"
+	lt_addtextkey( mt, "companies" );
+	lt_descend( mt );
+	
+	//Loop through the list
 	while ( inc->key ) {
 		if ( inc->depth ) {
 			lt_addtextkey( mt, inc->key );
@@ -271,7 +291,35 @@ int main (int argc, char *argv[]) {
 		inc++;
 	}
 
+	//Complete the encompassing table.
+	lt_ascend( mt );
+	lt_finalize( mt );
+
+	//Lock to initialize each hash
+	lt_lock( mt );
+
+	//Dump the table 
 	lt_dump( mt );
+
+	//Try copying multiple tables via lt_copy
+	zTable *cg_t, *fin_t;  
+	
+	//Pull the first one via an index
+	int findex = lt_geti( mt, "companies.Finance" );	
+	fin_t = lt_copy_by_index( mt, findex );
+	fprintf( stderr, "Dump just the finance table (hash %d)\n", findex );
+	//No locking is necessary...
+	lt_dump( fin_t );
+	lt_free( fin_t );
+	free( fin_t );
+
+	//Then pull captial goods, notice we use a key
+	cg_t = lt_copy_by_key( mt, "companies.Capital Goods" ); 
+	fprintf( stderr, "Then dump just the 'Capital Goods' table.");
+	fprintf( stderr, " (We'll use a string this time)\n" );
+	lt_dump( cg_t );
+	lt_free( cg_t );
+	free( cg_t );
 	lt_free( mt );
 	free( mt );
 	return 0;

@@ -1,14 +1,14 @@
-# zhasher
+# ztable
 
-zhasher is a library for handling hash tables in C.  It is intended as a drop-in two-file library that takes little work to setup and teardown, and even less work to integrate into a project of your own.
+ztable is a library for handling hash tables in C.  It is intended as a drop-in two-file library that takes little work to setup and teardown, and even less work to integrate into a project of your own.
 
 
 ## Installation
 
-To keep things simple, there will probably never be an official package for this.  zhasher will build on any Unix based platform with whatever compiler you choose.
+To keep things simple, there will probably never be an official package for this.  ztable will build on any Unix based platform with whatever compiler you choose.
 
-zhasher can be built with: 
-	`gcc -Wall -Werror -std=c99 zhasher.c main.c`
+ztable can be built with: 
+	`gcc -Wall -Werror -std=c99 ztable.c main.c
 
 
 ## Usage
@@ -93,7 +93,7 @@ zKeyval kv[1024] = { 0 };
 lt_init( t, kv, sizeof( kv ) );
 </pre>
 
-As stated earlier, strings and integers are not the only values that zhasher supports. zhasher can map strings to integers, other strings, blobs and void pointers, allowing whatever you want to fit into a slot.   Better support (read <i>typesafe</i>) for more abstract datatypes will probably end up here in the future. 
+As stated earlier, strings and integers are not the only values that ztable supports. ztable can map strings to integers, other strings, blobs and void pointers, allowing whatever you want to fit into a slot.   Better support (read <i>typesafe</i>) for more abstract datatypes will probably end up here in the future. 
 
 
 
@@ -102,7 +102,7 @@ As stated earlier, strings and integers are not the only values that zhasher sup
 
 ### Simple
 
-To get busy using zhasher as a hash table, only the following functions are really needed.
+To get busy using ztable as a hash table, only the following functions are really needed.
 
 #### Initialization & Teardown
 
@@ -125,10 +125,10 @@ To get busy using zhasher as a hash table, only the following functions are real
 - Add an integer value.  Return value can be discarded.
 
 `zhType lt_addtextkey(t, v)`
-- Add an zero-terminated string key.  Strings added in this manner are duplicated by zhasher.
+- Add an zero-terminated string key.  Strings added in this manner are duplicated by ztable.
 
 `zhType lt_addtextvalue(t, v)`
-- Add an zero-terminated string value.  Strings added in this manner are duplicated by zhasher. 
+- Add an zero-terminated string value.  Strings added in this manner are duplicated by ztable. 
 
 `zhType lt_addblobvalue(t, vblob, vlen)`
 - Add a BLOB value where vblob is an unsigned char * and vlen is its length.  Return value can be discarded.
@@ -228,4 +228,4 @@ Get an actual count of the elements at index <i>i</i>.
 
 ## Notes
 
-zhasher was extracted from a much larger library of mine called <a href="https://github.com/zaiah-dj/single">single.c</a>.  Much of that library has no use now, but this is one of the pieces that has found its way into my recent projects. 
+ztable was extracted from a much larger library of mine called <a href="https://github.com/zaiah-dj/single">single.c</a>.  Much of that library has no use now, but this is one of the pieces that has found its way into my recent projects. 

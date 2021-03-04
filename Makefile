@@ -18,3 +18,6 @@ debug: CC = clang
 debug: CFLAGS += $(DFLAGS)
 debug: test
 	@printf '' > /dev/null
+
+clean:
+	@rm *.o $(NAME)-test
