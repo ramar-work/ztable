@@ -1,26 +1,40 @@
-/* ------------------------------------------- * 
+/* ----------------------------------------------------------------
  * ztable.c
- * ---------
- * A hash table library written in C.
- *
- * Usage
- * -----
- *
- *
+ * ========
+ * 
+ * Summary
+ * =======
+ * ztable is a library for handling hash tables in C.  It is intended 
+ * as a drop-in two-file library that takes little work to setup and teardown, 
+ * and even less work to integrate into a project of your own.
+ * 
+ * ztable can be built with: 
+ * 	`gcc -Wall -Werror -std=c99 ztable.c main.c`
+ * 
+ * 
  * LICENSE
  * -------
- * Copyright 2020 Tubular Modular Inc. dba Collins Design
+ * Copyright 2020-2021 Tubular Modular Inc. dba Collins Design
  * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy 
+ * of this software and associated documentation files (the "Software"), to 
+ * deal in the Software without restriction, including without limitation the 
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
+ * sell copies of the Software, and to permit persons to whom the Software is 
+ * furnished to do so, subject to the following conditions:
  * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in 
+ * all copies or substantial portions of the Software.
  * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
+ * THE SOFTWARE.
  *
- * TODO
- * ----
- * 
- * ------------------------------------------- */
+ * ---------------------------------------------------------------- */
 #include "ztable.h"
 
 static const unsigned int lt_hash = 31;
@@ -82,9 +96,9 @@ static const int lt_maxbuf = 64;
 static const int lt_buflen = 4096;
 
 #ifdef LT_MAX_HASH
- static const int lt_max_slots     = LT_MAX_HASH;
+ static const int lt_max_slots = LT_MAX_HASH;
 #else
- static const int lt_max_slots     = 7;
+ static const int lt_max_slots = 7;
 #endif
 
 #ifdef DEBUG_H
@@ -223,7 +237,8 @@ const char *lt_strerror ( zTable *t ) {
 
 //Initiailizes a table data structure
 zTable *lt_init ( zTable *t, zKeyval *k, int size ) {
-	SHOWDATA( "Working with root table %p\n", t );
+	//Define
+	int actual_size = size;
 
 	//Calculate optimal modulus for hashing
 	if ( size <= 63 )
@@ -244,32 +259,22 @@ zTable *lt_init ( zTable *t, zKeyval *k, int size ) {
 		t->modulo = 16383; 
 	else if ( size <= 32767)
 		t->modulo = 32767; 
-	else if ( size <= 65535)
-		t->modulo = 65535; 
-	else if ( size <= 65535)
-		t->modulo = 131067; 
-	else if ( size <= 131067)
-		t->modulo = 199999; 
-	else if ( size <= 199961 )
-		t->modulo = 199999; 
 	else {
-		t->modulo = 511997; 
+		t->modulo = 65535; 
 	}
 
-	int actual_size = size;
 	t->mallocd = (!k) ? 1 : 0;
 
 	//Allocate space for users that don't pass in their own structure 
 	if ( !k ) {
 		actual_size = t->modulo;
-		k = malloc(t->modulo * sizeof(zKeyval));
-		if ( !k ) {	
+		if ( !( k = malloc( t->modulo * sizeof(zKeyval) ) ) ) {
 			t->error = ZTABLE_ERR_LT_ALLOCATE;
 			return 0;
 		}
 	}
 
-	if ( memset((void *)k, 0, sizeof(zKeyval) * actual_size) == NULL ) {
+	if ( !memset( (void *)k, 0, sizeof(zKeyval) * actual_size ) ) {
 		t->error = ZTABLE_ERR_LT_ALLOCATE;
 		return 0;
 	}
@@ -292,9 +297,6 @@ zTable *lt_init ( zTable *t, zKeyval *k, int size ) {
 	t->start = 0;
 	t->end = 0;
 	t->rCount = &t->count;
-	//t->parent = NULL;
-
-	//Lastly, increment tte pointer by one so we can always follow it
 	return t;
 }
 
@@ -321,47 +323,30 @@ zhType lt_add ( zTable *t, int side, zhType lt, int vi, float vf,
 	}
 
 	//Set each value to its matching type
-	if ( lt == LITE_INT ) {
+	if ( lt == LITE_INT )
 		r->vint = vi;
-		SHOWDATA( "Adding int %s %d to table at %p", ( !side ) ? "key" : "value", r->vint, ( void * )t );
-	}
-	else if ( lt == LITE_FLT ) {
+	else if ( lt == LITE_FLT )
 		r->vfloat = vf;
-		SHOWDATA( "Adding float %s %f to table at %p", ( !side ) ? "key" : "value", r->vfloat, ( void * )t );
-	}
-#ifdef LITE_NUL
-	else if ( lt == LITE_NUL ) {
-		r->vnull = NULL;
-		SHOWDATA( "Adding null %s to table at %p", ( !side ) ? "key" : "value", ( void * )t );
-	}
-#endif
-	else if ( lt == LITE_USR ) {
+	else if ( lt == LITE_USR )
 		r->vusrdata = vn;
-		SHOWDATA( "Adding userdata %p to table at %p", ( void * )r->vusrdata, ( void * )t );
-	}
-	else if ( lt == LITE_TBL ) {
-		SHOWDATA( "Adding invalid value table!" );
+	else if ( lt == LITE_TBL )
 		return ( t->error = ZTABLE_ERR_LT_INVALID_VALUE ) ? -1 : -1;
-	}
-	else if ( lt == LITE_BLB ) {
+	else if ( lt == LITE_BLB )
 		r->vblob.blob = vb, r->vblob.size = vblen;
-		SHOWDATA( "Adding blob %s of length %d to table at %p", (!side) ? "key" : "value", r->vblob.size, ( void * )t );
-	}
+#ifdef LITE_NUL
+	else if ( lt == LITE_NUL )
+		r->vnull = NULL;
+#endif
 	else if ( lt == LITE_TXT ) {
-		//Even though this says LITE_TXT, the assumption 
-		//is that tab needs to duplicate the data. 
-		r->vchar = malloc( vblen + 1 );
-		if ( !r->vchar )
+		if ( !( r->vchar = malloc( vblen + 1 ) ) )
 			return 0;
 		else {
 			memset( r->vchar, 0, vblen + 1 );
 			memcpy( r->vchar, vb, vblen );
 			r->vchar[ vblen ] = '\0';
-			SHOWDATA( "Adding text %s '%s' to table at %p", ( !side ) ? "key" : "value", r->vchar, ( void * )t );
 		}
 	}
 	else {
-		SHOWDATA( "Attempted to add unknown %s type to table at %p", ( !side ) ? "key" : "value", ( void * )t );
 		return 0;
 	}
 	return lt;
