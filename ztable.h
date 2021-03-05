@@ -343,7 +343,6 @@ typedef struct {
 	unsigned int index  ;     //Index to current element
 	unsigned int count  ;     //Elements in table
 	unsigned int *rCount;     //Elements in current table 
-
 	unsigned short modulo ;     //Optimal modulus value for hashing
   int mallocd;     //An error occurred, read it...
 	int srcmallocd;  //An error occurred, read it...
@@ -352,17 +351,11 @@ typedef struct {
 	int start  ;     //Table bounds are here if "lt_within" is used
 	int end    ;
 	int buflen ;
-  unsigned char *src   ;     //Source for when you need it
-  unsigned char *buf   ;     //Pointer for trimmed keys and values
-  zKeyval        *head  ;     //Pointer to the first element
-  zhTable     *current;    //Pointer to the first element
- #ifndef ERR_H
-  int error;
-	#ifndef ERRV_H
-	char  errmsg[ ZTABLE_ERRV_LENGTH ];
-	#endif 
- #endif
-  
+  unsigned char *src; //Source for when you need it
+  unsigned char *buf; //Pointer for trimmed keys and values
+  zKeyval *head; //Pointer to the first element
+  zhTable *current; //Pointer to the current element
+  char error, errmsg[ ZTABLE_ERRV_LENGTH ];
 } zTable;
 
 struct zhTable {

@@ -230,8 +230,8 @@ void lt_clearerror ( zTable *t ) {
 
 //Return errors as strings
 const char *lt_strerror ( zTable *t ) {
-	//Paranoid bounds checking
-	return ( t->error > -1 && t->error < ZTABLE_ERR_LT_INDEX_MAX) ? lt_errors[ t->error ] : NULL; 
+	return ( t->error > -1 && t->error < ZTABLE_ERR_LT_INDEX_MAX)
+		? lt_errors[ (int)t->error ] : NULL; 
 }
 
 
@@ -900,7 +900,6 @@ static int copy_iterator( zKeyval *kv, int i, void *p ) {
 	struct zh_iterator *f = (struct zh_iterator *)p; 
 	zTable **t = (zTable **)f->userdata;
 
-	
 	//decrease depth
 	if ( kv->key.type == LITE_TRM ) {
 		if ( --f->depth == 0 ) {
