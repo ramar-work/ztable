@@ -57,7 +57,9 @@
 
 #define LT_POLYMORPH_BUFLEN 2048
 
-#define LT_MAX_HASH 7 
+#ifndef LT_MAX_HASH
+ #define LT_MAX_HASH 7 
+#endif
 
 #define lt_counti(t, i) \
 	lt_count_at_index( t, i, 1 ) 
