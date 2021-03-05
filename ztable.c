@@ -73,18 +73,18 @@ static const char *lt_errors[] = {
 };
 
 static const char *lt_polymorph_type_names[] = {
-	[LITE_NON] = "uninitialized", 
-	[LITE_INT] = "integer",     
-	[LITE_FLT] = "float",     
-	[LITE_TXT] = "text",     
-	[LITE_BLB] = "blob",     
-#ifdef LITE_NUL
-	[LITE_NUL] = "null",     
+	[ZTABLE_NON] = "uninitialized", 
+	[ZTABLE_INT] = "integer",     
+	[ZTABLE_FLT] = "float",     
+	[ZTABLE_TXT] = "text",     
+	[ZTABLE_BLB] = "blob",     
+#ifdef ZTABLE_NUL
+	[ZTABLE_NUL] = "null",     
 #endif
-	[LITE_USR] = "userdata",     
-	[LITE_TBL] = "table",     
-	[LITE_TRM] = "terminator",     
-	[LITE_NOD] = "node",     
+	[ZTABLE_USR] = "userdata",     
+	[ZTABLE_TBL] = "table",     
+	[ZTABLE_TRM] = "terminator",     
+	[ZTABLE_NOD] = "node",     
 };
 
 static const zhRecord nul = { 0 };
@@ -111,8 +111,8 @@ struct zh_iterator {
 
 
 static int lt_hashu (unsigned char *ustr, int len, int size) {
-	unsigned int hash=lt_hash;
-	for (int i=0; i<len; i++) hash += ((hash*31) + hash) + ustr[i];
+	unsigned int hash = lt_hash;
+	for ( int i = 0; i < len; i++ ) hash += ( ( hash * 31 ) + hash ) + ustr[i];
 	return hash % size;
 }
 
@@ -120,27 +120,26 @@ static int lt_hashu (unsigned char *ustr, int len, int size) {
 //Build a string or some other index in reverse
 static int build_backwards (zKeyval *t, unsigned char *buf, int bs) { 
 	//This should return if there is no value...
-	int size =  0, 
-      mm = bs;
-	zKeyval *p =  t; 
+	int size = 0, mm = bs;
+	zKeyval *p =  t;
 
-	while (p) {
+	while ( p ) {
 		//This should only run if there is a blob or pKey	
-		if (p->key.type == LITE_INT || p->key.type == LITE_FLT) {
+		if ( p->key.type == ZTABLE_INT || p->key.type == ZTABLE_FLT ) {
 			char b[128] = {0};
-			double f = (t->key.type == LITE_FLT) ? p->key.v.vfloat : (double)p->key.v.vint;
-			int a =	snprintf( b, 127, (t->key.type == LITE_FLT) ? "%f" : "%.0f", f);
+			double f = (t->key.type == ZTABLE_FLT) ? p->key.v.vfloat : (double)p->key.v.vint;
+			int a =	snprintf( b, 127, (t->key.type == ZTABLE_FLT) ? "%f" : "%.0f", f);
 			mm -= strlen(b);
 			memcpy( &buf[ mm ], b, a );
 			buf[ --mm ] = '.';
 		}
-		else if (p->key.type == LITE_BLB) {
+		else if ( p->key.type == ZTABLE_BLB ) {
 			zhBlob *b = &p->key.v.vblob;
 			mm -= b->size;
 			memcpy( &buf[ mm ], b->blob, b->size );
 			buf[ --mm ] = '.';
 		}
-		else if (p->key.type == LITE_TXT) {
+		else if ( p->key.type == ZTABLE_TXT ) {
 			char *b = p->key.v.vchar;
 			mm -= strlen(b);
 			memcpy( &buf[ mm ], b, strlen(b));
@@ -188,25 +187,18 @@ unsigned char *lt_trim ( unsigned char *msg, char *trim, int len, int *nlen ) {
 
 //Count indices in a table. If index is greater than 1 and the item is a "table", then will return the number of elements in said table
 int lt_count_at_index ( zTable *t, int index, int type ) {
+	//Define
+	zhTable *tt = NULL;
+
 	//Return count of all elements
 	if ( index == -1 )
 		return t->count;
-	else if ( index == 0 ) {
-		//NOTE: If the first index is not a table, there will always only be one value on the other side.
-		if ( lt_vta( t, index ) != LITE_TBL )
-			return 1; //t->count;
-		else {
-			zhTable *tt = &lt_table_at( t, index );
-			return ( tt ) ? (tt->count - type) : 0;
-		}
-	}
 	else {
 		//Return one for elements that exist, but aren't tables
-		if ( lt_vta( t, index ) != LITE_TBL )
+		if ( lt_vta( t, index ) != ZTABLE_TBL )
 			return 1;
 		else {
-			zhTable *tt = &lt_table_at( t, index );
-			return ( tt ) ? (tt->count - type) : 0;
+			return ( tt = &lt_table_at( t, index ) ) ? (tt->count - type) : 0;
 		}
 	}
 	return 0;
@@ -215,19 +207,6 @@ int lt_count_at_index ( zTable *t, int index, int type ) {
 
 int lt_countall( zTable *t ) {
 	return t->count + 1;
-}
-
-
-//Clear error
-void lt_clearerror ( zTable *t ) {
-	t->error = 0;
-}
-
-
-//Return errors as strings
-const char *lt_strerror ( zTable *t ) {
-	return ( t->error > -1 && t->error < ZTABLE_ERR_LT_INDEX_MAX)
-		? lt_errors[ (int)t->error ] : NULL; 
 }
 
 
@@ -309,31 +288,31 @@ zhType lt_add ( zTable *t, int side, zhType lt, int vi, float vf,
 	}
 
 	//...		
-	zhValue  *v = (!side) ? &(t->head + t->index)->key : &(t->head + t->index)->value;
+	zhValue *v = (!side) ? &(t->head + t->index)->key : &(t->head + t->index)->value;
 	zhRecord *r = &v->v;
-	v->type       = lt;
+	v->type = lt;
 
 	//Check for zero length blobs or text
-	if ( ( lt == LITE_BLB || lt == LITE_TXT ) && !vblen ) {
+	if ( ( lt == ZTABLE_BLB || lt == ZTABLE_TXT ) && !vblen ) {
 		return 0;
 	}
 
 	//Set each value to its matching type
-	if ( lt == LITE_INT )
+	if ( lt == ZTABLE_INT )
 		r->vint = vi;
-	else if ( lt == LITE_FLT )
+	else if ( lt == ZTABLE_FLT )
 		r->vfloat = vf;
-	else if ( lt == LITE_USR )
+	else if ( lt == ZTABLE_USR )
 		r->vusrdata = vn;
-	else if ( lt == LITE_TBL )
+	else if ( lt == ZTABLE_TBL )
 		return ( t->error = ZTABLE_ERR_LT_INVALID_VALUE ) ? -1 : -1;
-	else if ( lt == LITE_BLB )
+	else if ( lt == ZTABLE_BLB )
 		r->vblob.blob = vb, r->vblob.size = vblen;
-#ifdef LITE_NUL
-	else if ( lt == LITE_NUL )
+#ifdef ZTABLE_NUL
+	else if ( lt == ZTABLE_NUL )
 		r->vnull = NULL;
 #endif
-	else if ( lt == LITE_TXT ) {
+	else if ( lt == ZTABLE_TXT ) {
 		if ( !( r->vchar = malloc( vblen + 1 ) ) )
 			return 0;
 		else {
@@ -372,7 +351,7 @@ const char *lt_rettypename( zTable *t, int side, int index ) {
 
 
 const char *lt_typename ( int type ) {
-	return ( type > -1 && type <= LITE_NOD ) ? lt_polymorph_type_names[ type ] : NULL;
+	return ( type > -1 && type <= ZTABLE_NOD ) ? lt_polymorph_type_names[ type ] : NULL;
 }
 
 
@@ -391,7 +370,7 @@ int lt_move ( zTable *t, int dir ) {
 	if ( !dir ) {
 		//Set count of elements in this new table to actual count
 		zhTable *T = &value->v.vtable;
-		value->type = LITE_TBL;
+		value->type = ZTABLE_TBL;
 		t->rCount = &T->count;
 		T->parent = ( !t->current ) ? NULL : t->current;
 		T->ptr = *(long *)&T; 
@@ -400,8 +379,8 @@ int lt_move ( zTable *t, int dir ) {
 	else {
 		//Set references
 		zhValue *key = &curr->key; 
-		key->type = LITE_TRM;
-		value->type = LITE_NUL;
+		key->type = ZTABLE_TRM;
+		value->type = ZTABLE_NUL;
 		zhRecord *r = &key->v;	
 
 		//....
@@ -449,7 +428,7 @@ void lt_lock ( zTable *t ) {
 		memset( buf, 0, LT_POLYMORPH_BUFLEN );
 
 		//Check keys and values...
-		if (tt->value.type == LITE_NUL ) {
+		if (tt->value.type == ZTABLE_NUL ) {
 			if ( parent ) {
 				parent = parent->parent;
 			}
@@ -462,7 +441,7 @@ void lt_lock ( zTable *t ) {
 		}
 	
 		//Do parents here
-		if ( tt->value.type == LITE_TBL ) {
+		if ( tt->value.type == ZTABLE_TBL ) {
 			parent = tt;
 		}
 
@@ -631,7 +610,7 @@ zKeyval *lt_items_by_index ( zTable *t, int ind ) {
 	zKeyval *curr = NULL;
 
 	if ( t->cptr == -1 ) {
-		if ( (t->head + ind)->value.type != LITE_TBL ) {
+		if ( (t->head + ind)->value.type != ZTABLE_TBL ) {
 			return NULL;
 		}
 		t->index = ind;
@@ -647,7 +626,7 @@ zKeyval *lt_items_by_index ( zTable *t, int ind ) {
 	curr = t->head + t->index;
 
 	//Check the key name and see if it matches t->cptr, return null if so
-	if ( curr->key.type == LITE_TRM && curr->key.v.vptr == t->cptr ) {
+	if ( curr->key.type == ZTABLE_TRM && curr->key.v.vptr == t->cptr ) {
 		t->index = 0, t->cptr = -1;
 		return NULL;
 	}
@@ -671,7 +650,7 @@ zKeyval *lt_items_i ( zTable *t, unsigned char *src, int len ) {
 			return NULL;
 		}
 
-		if ( (t->head + in)->value.type != LITE_TBL ) {
+		if ( (t->head + in)->value.type != ZTABLE_TBL ) {
 			return NULL;
 		}
 		
@@ -687,7 +666,7 @@ zKeyval *lt_items_i ( zTable *t, unsigned char *src, int len ) {
 	curr = t->head + t->index;
 
 	//Check the key name and see if it matches t->cptr, return null if so
-	if ( curr->key.type == LITE_TRM && curr->key.v.vptr == t->cptr ) {
+	if ( curr->key.type == ZTABLE_TRM && curr->key.v.vptr == t->cptr ) {
 		t->index = 0, t->cptr = -1;
 		return NULL;
 	}
@@ -713,13 +692,12 @@ zTable *lt_within_long( zTable *t, unsigned char *src, int len ) {
 	t->buflen = len;
 
 	//Search for a table	
-	if ( (a = lt_get_long_i(t, src, len)) == -1 || lt_vta(t, a) != LITE_TBL ) {
+	if ( (a = lt_get_long_i(t, src, len)) == -1 || lt_vta(t, a) != ZTABLE_TBL ) {
 		return NULL;
 	}
 
 	//Set start and end, then return the table
-	t->start = a;
-	t->end = a + (&lt_table_at( t, a ))->count;
+	t->start = a, t->end = a + (&lt_table_at( t, a ))->count;
 	return t;
 }
 
@@ -738,8 +716,8 @@ void lt_free ( zTable *t ) {
 	//Free any text keys
 	for ( int ii=0; ii < t->count; ii++ ) {
 		zKeyval *k = t->head + ii;
-		( k->key.type == LITE_TXT ) ? free( k->key.v.vchar ), k->key.v.vchar = NULL : 0;
-		( k->value.type == LITE_TXT ) ? free( k->value.v.vchar ), k->value.v.vchar = NULL : 0;
+		( k->key.type == ZTABLE_TXT ) ? free( k->key.v.vchar ), k->key.v.vchar = NULL : 0;
+		( k->value.type == ZTABLE_TXT ) ? free( k->value.v.vchar ), k->value.v.vchar = NULL : 0;
 	}
 
 	if ( t->mallocd ) {
@@ -758,8 +736,6 @@ void lt_free ( zTable *t ) {
 
 
 
-
-
 //An iterator providing more control
 int lt_exec_complex (zTable *t, int start, int end, void *p, int (*fp)( zKeyval *kv, int i, void *p ) ) {
 	//Bounds violations should stop.
@@ -767,16 +743,12 @@ int lt_exec_complex (zTable *t, int start, int end, void *p, int (*fp)( zKeyval 
 		return 0;
 	}
 
-	//Loop through each index
-	int i = start;
-	int status = 0;
-	do {
-		if ( (status = fp( (t->head + i), i, p )) == 0 ) {
-			return 0;
-		}
-	} while ( ++i < end );
+	for ( int i = start; i < end; ++i ) {
+		if ( !fp( (t->head + i ), i, p ) ) return 0;
+	}
 	return 1;
 }
+
 
 
 //Copy iterator
@@ -785,7 +757,7 @@ static int copy_iterator( zKeyval *kv, int i, void *p ) {
 	zTable **t = (zTable **)f->userdata;
 
 	//decrease depth
-	if ( kv->key.type == LITE_TRM ) {
+	if ( kv->key.type == ZTABLE_TRM ) {
 		if ( --f->depth == 0 ) {
 			lt_ascend( *t );
 			//lt_finalize( *t );
@@ -794,35 +766,35 @@ static int copy_iterator( zKeyval *kv, int i, void *p ) {
 	}
 
 	//increase depth
-	if ( kv->value.type == LITE_TBL ) {
+	if ( kv->value.type == ZTABLE_TBL ) {
 		f->depth ++;
 	}
 
-	if ( kv->key.type == LITE_INT )
+	if ( kv->key.type == ZTABLE_INT )
 		lt_addintkey( *t, kv->key.v.vint );
-	else if ( kv->key.type == LITE_TXT )
+	else if ( kv->key.type == ZTABLE_TXT )
 		lt_addtextkey( *t, kv->key.v.vchar );
-	else if ( kv->key.type == LITE_BLB ) 
+	else if ( kv->key.type == ZTABLE_BLB ) 
 		lt_addblobkey( *t, kv->key.v.vblob.blob, kv->key.v.vblob.size );
-	else if ( kv->key.type == LITE_TRM ) {
+	else if ( kv->key.type == ZTABLE_TRM ) {
 		lt_ascend( *t );
 		//lt_finalize( *t );
 		return 1;
 	}
 
-	if ( kv->value.type == LITE_INT )
+	if ( kv->value.type == ZTABLE_INT )
 		lt_addintvalue( *t, kv->value.v.vint );
-	else if ( kv->value.type == LITE_BLB ) 
+	else if ( kv->value.type == ZTABLE_BLB ) 
 		lt_addblobvalue( *t, kv->value.v.vblob.blob, kv->value.v.vblob.size );
-	else if ( kv->value.type == LITE_FLT )
+	else if ( kv->value.type == ZTABLE_FLT )
 		lt_addfloatvalue( *t, kv->value.v.vfloat );	
-	else if ( kv->value.type == LITE_USR )
+	else if ( kv->value.type == ZTABLE_USR )
 		lt_addudvalue( *t, kv->value.v.vusrdata );
-	else if ( kv->value.type == LITE_TXT ) {
+	else if ( kv->value.type == ZTABLE_TXT ) {
 		char * v = !kv->value.v.vchar ? "" : kv->value.v.vchar;
-		lt_addtextvalue( *t, v ); 
+		lt_addtextvalue( *t, v );
 	}
-	else if ( kv->value.type == LITE_TBL ) {
+	else if ( kv->value.type == ZTABLE_TBL ) {
 		lt_descend( *t );
 		return 1;
 	}
@@ -833,32 +805,27 @@ static int copy_iterator( zKeyval *kv, int i, void *p ) {
 
 
 
-//Shallow copy
-zTable *lt_copy ( zTable *t, int start, int end ) {
+//Deep copy
+zTable *lt_deep_copy ( zTable *t, int start, int end ) {
 	zTable *nt = NULL;
-	struct zh_iterator zh_data = { 0 };
+	struct zh_iterator zd = { 0 };
 
 	if ( start == -1 ) {
+		t->error = 0; // INVALID INDEX
 		return NULL;
 	}
 
 	//Finally, fp->depth should be zero when done, but starting at one may save time
-	if ( !( nt = malloc( sizeof ( zTable ) ) ) || !lt_init( nt, NULL, 256 ) ) {
+	if ( !( nt = malloc( sizeof ( zTable ) ) ) || !lt_init( nt, NULL, t->modulo ) ) {
+		t->error = 0; // MEMORY ALLOCATION ERROR
 		return NULL;
 	}
 
 	//Save data
-	zh_data.len = end - start;	
-	zh_data.depth = 0;
-	zh_data.userdata = &nt;
-	zh_data.source = t;	
+	zd.len = end - start, zd.depth = 0;
+	zd.userdata = &nt, zd.source = t;	
 
-	//This should only copy a full table. 
-	//always make the thing start at zero, no matter where table is, it should be fine...
-	//whenever you hit lite_trm, stop		
-
-	//Copy this
-	if ( !lt_exec_complex( t, start, t->count, &zh_data, copy_iterator ) ) {
+	if ( !lt_exec_complex( t, start, t->count, &zd, copy_iterator ) ) {
 		lt_reset( t );
 		lt_lock( nt );
 		return nt; 
@@ -869,6 +836,20 @@ zTable *lt_copy ( zTable *t, int start, int end ) {
 	return nt;
 }
 
+
+#ifdef ZTABLE_ERR_EXP 
+//Clear error
+void lt_clearerror ( zTable *t ) {
+	t->error = 0;
+}
+
+
+//Return errors as strings
+const char *lt_strerror ( zTable *t ) {
+	return ( t->error > -1 && t->error < ZTABLE_ERR_LT_INDEX_MAX)
+		? lt_errors[ (int)t->error ] : NULL; 
+}
+#endif
 
 
 #ifdef DEBUG_H 
@@ -912,11 +893,11 @@ void lt_printall ( zTable *t ) {
 		vv = lt_rettypename( t, 1, ii );
 
 		//Finally, the key itself (the whole thing, I suppose)
-		if ((kt = lt_rettype( t, 0, ii )) == LITE_INT )
+		if ((kt = lt_rettype( t, 0, ii )) == ZTABLE_INT )
 			sprintf( strbuf, "%d, ", (t->head + ii )->key.v.vint );
-		else if ( kt == LITE_TXT )
+		else if ( kt == ZTABLE_TXT )
 			sprintf( strbuf, "%s, ", (t->head + ii )->key.v.vchar );
-		else if ( kt == LITE_BLB ) 
+		else if ( kt == ZTABLE_BLB ) 
 		{
 			int size = (t->head + ii )->key.v.vblob.size;
 			if ( size > 1024 ) 
@@ -930,7 +911,7 @@ void lt_printall ( zTable *t ) {
 		//Build a string backwards
 		build_backwards( t->head + ii, (unsigned char *)bkbuf, 1024 );
 		hash = lt_hashu( (unsigned char *)bkbuf, strlen(bkbuf), t->modulo );
-		sprintf( habuf, "%d", ( kt == LITE_NON ) ? -1 : hash );
+		sprintf( habuf, "%d", ( kt == ZTABLE_NON ) ? -1 : hash );
 		fprintf( stderr, fmt, inbuf, kk, vv, strbuf, bkbuf, habuf, nmbuf );
 	}
 }
@@ -938,29 +919,29 @@ void lt_printall ( zTable *t ) {
 
 //
 void print_key( zKeyval *kv ) {
-	if ( kv->key.type == LITE_INT )
+	if ( kv->key.type == ZTABLE_INT )
 		fprintf( stderr, "%d\n", kv->key.v.vint );
-	else if ( kv->key.type == LITE_TXT )
+	else if ( kv->key.type == ZTABLE_TXT )
 		fprintf( stderr, "%s\n", kv->key.v.vchar );
-	else if ( kv->key.type == LITE_BLB ) 
+	else if ( kv->key.type == ZTABLE_BLB ) 
 		write( 2, kv->key.v.vblob.blob, kv->key.v.vblob.size );
-	else if ( kv->key.type == LITE_TRM ) {
+	else if ( kv->key.type == ZTABLE_TRM ) {
 		0;
 	}
 }
 
 void print_value( zKeyval *kv ) {
-	if ( kv->value.type == LITE_INT )
+	if ( kv->value.type == ZTABLE_INT )
 		fprintf( stderr, "%d\n", kv->value.v.vint );
-	else if ( kv->value.type == LITE_TXT )
+	else if ( kv->value.type == ZTABLE_TXT )
 		fprintf( stderr, "%s\n", kv->value.v.vchar );
-	else if ( kv->value.type == LITE_BLB ) 
+	else if ( kv->value.type == ZTABLE_BLB ) 
 		write( 2, kv->value.v.vblob.blob, kv->value.v.vblob.size );
-	else if ( kv->value.type == LITE_FLT )
+	else if ( kv->value.type == ZTABLE_FLT )
 		fprintf( stderr, "%f\n", kv->value.v.vfloat );
-	else if ( kv->value.type == LITE_USR )
+	else if ( kv->value.type == ZTABLE_USR )
 		fprintf( stderr, "%p\n", kv->value.v.vusrdata );
-	else if ( kv->value.type == LITE_TBL ) {
+	else if ( kv->value.type == ZTABLE_TBL ) {
 		fprintf( stderr, "%p (table)\n", &kv->value.v.vtable );
 	}
 }
@@ -983,16 +964,16 @@ static void lt_printindex ( zKeyval *tt, int showkey, int ind ) {
 		if ( i ) {
 			memcpy( &b[w], " -> ", 4 );
 			w += 4;
-			/*LITE_NODE is handled in printall*/
-			if (t == LITE_NON)
+			/*ZTABLE_NODE is handled in printall*/
+			if (t == ZTABLE_NON)
 				w += snprintf( &b[w], maxlen - w, "%s", "is uninitialized" );
-		#ifdef LITE_NUL
-			else if (t == LITE_NUL)
+		#ifdef ZTABLE_NUL
+			else if (t == ZTABLE_NUL)
 				w += snprintf( &b[w], maxlen - w, "is terminator" );
 		#endif
-			else if (t == LITE_USR)
+			else if (t == ZTABLE_USR)
 				w += snprintf( &b[w], maxlen - w, "userdata [address: %p]", r->vusrdata );
-			else if (t == LITE_TBL) {
+			else if (t == ZTABLE_TBL) {
 				zhTable *rt = &r->vtable;
 				w += snprintf( &b[w], maxlen - w, 
 					"table [address: %p, ptr: %ld, elements: %d]", (void *)rt, rt->ptr, rt->count );
@@ -1001,9 +982,9 @@ static void lt_printindex ( zKeyval *tt, int showkey, int ind ) {
 
 		//TODO: This just got ugly.  Combine the different situations better...
 		if ( !i && showkey ) { 
-			if ( t == LITE_TRM )
+			if ( t == ZTABLE_TRM )
 				w += snprintf( &b[w], maxlen - w, "%ld", r->vptr );
-			else if ( t == LITE_NON || t == LITE_NUL )
+			else if ( t == ZTABLE_NON || t == ZTABLE_NUL )
 				w += snprintf( &b[w], maxlen - w, "(null)" );
 			else {
 				w += build_backwards( tt, (unsigned char *)b, maxlen );
@@ -1011,15 +992,15 @@ static void lt_printindex ( zKeyval *tt, int showkey, int ind ) {
 		}
 		else {
 			//I want to see the full key
-			if (t == LITE_FLT || t == LITE_INT)
+			if (t == ZTABLE_FLT || t == ZTABLE_INT)
 				w += snprintf( &b[w], maxlen - w, "%d", r->vint );
-			else if (t == LITE_FLT)
+			else if (t == ZTABLE_FLT)
 				w += snprintf( &b[w], maxlen - w, "%f", r->vfloat );
-			else if (t == LITE_TXT)
+			else if (t == ZTABLE_TXT)
 				w += snprintf( &b[w], maxlen - w, "%s", r->vchar );
-			else if (t == LITE_TRM)
+			else if (t == ZTABLE_TRM)
 				w += snprintf( &b[w], maxlen - w, "%ld", r->vptr );
-			else if (t == LITE_BLB) {
+			else if (t == ZTABLE_BLB) {
 				zhBlob *bb = &r->vblob;
 				if ( bb->size < 0 )
 					return;	
@@ -1049,7 +1030,7 @@ int __lt_dump ( zKeyval *kv, int i, void *p ) {
 		write( LT_DEVICE, buf, l );
 	}
 	lt_printindex( kv, pp->dumptype, pp->level );
-	pp->level += (vt == LITE_NUL) ? -1 : (vt == LITE_TBL) ? 1 : 0;
+	pp->level += (vt == ZTABLE_NUL) ? -1 : (vt == ZTABLE_TBL) ? 1 : 0;
 	return 1;
 }
 #endif
