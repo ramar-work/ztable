@@ -89,7 +89,7 @@ static const char *lt_polymorph_type_names[] = {
 
 static const zhRecord nul = { 0 };
 
-static const zhRecord *supernul = &nul;
+static const zhRecord *zt_nul = &nul;
 
 static const int lt_maxbuf = 64;
 
@@ -540,11 +540,11 @@ zKeyval *lt_retkv ( zTable *t, int index ) {
 zhRecord *lt_ret ( zTable *t, zhType type, int index ) {
 	if ( index <= -1 || index > t->count ) {
 		t->error = ZTABLE_ERR_LT_INVALID_INDEX;
-		return (zhRecord *)supernul; 
+		return (zhRecord *)zt_nul; 
 	}
 
 	if ( (t->head + index)->value.type != type ) { 
-		return (zhRecord *)supernul; 
+		return (zhRecord *)zt_nul; 
 	}
 
 	return &(t->head + index)->value.v; 
