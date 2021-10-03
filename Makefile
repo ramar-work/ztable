@@ -1,5 +1,4 @@
 NAME = ztable
-OS = $(shell uname | sed 's/[_ ].*//')
 LDFLAGS =
 DFLAGS = -g -O0 -fsanitize=address -fsanitize-undefined-trap-on-error
 CLANGFLAGS = -Wall -Werror -std=c99 -Wno-unused -Wno-format-security
@@ -13,6 +12,16 @@ VERSION = 0.01
 
 test:
 	$(CC) $(CFLAGS) -o $(NAME)-test $(NAME).c main.c
+
+win: CC = clang
+win: CFLAGS = $(CLANGFLAGS)
+win:
+	$(CC) $(CFLAGS) -o $(NAME)-test.exe $(NAME).c main.c
+
+clang: CC = clang
+clang: CFLAGS = $(CLANGFLAGS)
+clang: test
+	@printf '' > /dev/null
 
 debug: CC = clang
 debug: CFLAGS += $(DFLAGS)

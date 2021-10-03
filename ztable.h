@@ -8,7 +8,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
-#include <unistd.h>
+
+#ifndef _WIN32
+ #include <unistd.h>
+#else
+ #include <io.h>
+ #define write(FD,C,CLEN) _write(FD, C, CLEN)
+#endif
 
 #ifndef ZTABLE_H
 #define ZTABLE_H
