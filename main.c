@@ -185,8 +185,8 @@ struct yakvs { const char *key; char *val; } yakvs_list[] = {
 
 
 int main (int argc, char *argv[]) {
-	//The zTable structure can be allocated either dynamically or statically
-	zTable *t = malloc( sizeof( zTable ) );
+	//The ztable_t structure can be allocated either dynamically or statically
+	ztable_t *t = malloc( sizeof( ztable_t ) );
 
 	//However, the structure's initialization will usually be dynamic.
 	lt_init( t, NULL, 1024 );
@@ -205,7 +205,7 @@ int main (int argc, char *argv[]) {
 		y++;
 	}
 
-	//Finally, to fully initialize the table, use lt_lock( zTable *t )
+	//Finally, to fully initialize the table, use lt_lock( ztable_t *t )
 	lt_lock( t );
 
 	//And for the purposes of this test, we'll see where hashes are...
@@ -227,7 +227,7 @@ int main (int argc, char *argv[]) {
 	//Let's try another example, with random values on the other side...
 	const char **name = list;	
 	int i = 0;
-	zTable *tt = malloc( sizeof( zTable ) );
+	ztable_t *tt = malloc( sizeof( ztable_t ) );
 	lt_init( tt, NULL, 1024 );
 
 	fprintf( stderr, "\nPRESIDENTS\n============\n" );
@@ -265,7 +265,7 @@ int main (int argc, char *argv[]) {
 	int key = 0;
 
 	//Initialize a big table
-	zTable *mt = malloc( sizeof( zTable ) );
+	ztable_t *mt = malloc( sizeof( ztable_t ) );
 	lt_init( mt, NULL, 2048 );
 
 	//Add a key and table to keep each of these entries in the same "namespace"
@@ -302,7 +302,7 @@ int main (int argc, char *argv[]) {
 	lt_dump( mt );
 
 	//Try copying multiple tables via lt_copy
-	zTable *cg_t, *fin_t;  
+	ztable_t *cg_t, *fin_t;  
 	
 	//Pull the first one via an index
 	int findex = lt_geti( mt, "companies.Finance" );	

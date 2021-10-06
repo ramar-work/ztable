@@ -11,12 +11,12 @@ PREFIX = /usr/local
 VERSION = 0.01
 
 test:
-	$(CC) $(CFLAGS) -o $(NAME)-test $(NAME).c main.c
+	$(CC) $(CFLAGS) -DDEBUG_H -o $(NAME)-test $(NAME).c main.c
 
 win: CC = clang
 win: CFLAGS = $(CLANGFLAGS)
 win:
-	$(CC) $(CFLAGS) -o $(NAME)-test.exe $(NAME).c main.c
+	$(CC) $(CFLAGS) -DDEBUG_H -o $(NAME)-test.exe $(NAME).c main.c
 
 clang: CC = clang
 clang: CFLAGS = $(CLANGFLAGS)
