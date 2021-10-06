@@ -29,4 +29,4 @@ debug: test
 	@printf '' > /dev/null
 
 clean:
-	@rm *.o $(NAME)-test
+	@rm *.o $(NAME)-test*
